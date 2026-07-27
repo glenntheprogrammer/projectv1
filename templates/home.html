@@ -1,0 +1,82 @@
+{% extends "theme/base.html" %}
+{% block content %}
+
+<div class="row row-deck row-cards">
+ <!-- BEGIN PAGE HEADER -->
+<div class="page-header d-print-none" aria-label="Page header">
+  <div class="container-xl">
+
+    <div class="row align-items-center">
+
+      <!-- LEFT -->
+      <div class="col">
+
+        <div class="page-pretitle">Overview</div>
+
+        <!-- TITLE + SEARCH (DESKTOP ONLY) -->
+        <div class="d-flex align-items-center gap-3 flex-wrap d-none d-md-flex">
+
+          <h2 class="page-title mb-0">Home Page</h2>
+
+          <div style="width: 350px;">
+            <input
+              type="text"
+              id="searchPosts"
+              class="form-control rounded-pill search-home"
+              placeholder="Search posts..."
+            >
+          </div>
+
+        </div>
+
+        <!-- TITLE ONLY (MOBILE) -->
+        <h2 class="page-title mb-0 d-md-none">Home Page</h2>
+
+      </div>
+
+      <!-- RIGHT -->
+      <div class="col-auto">
+
+        <div class="btn-list">
+
+          <a href="{% url 'profiles:profile' %}" class="btn btn-1">
+              <i class="me-1"></i> Profile
+          </a>
+
+          <a href="#"
+             class="btn btn-primary d-none d-sm-inline-block"
+             data-bs-toggle="modal"
+             data-bs-target="#modal-report">
+            <i class="fas fa-plus me-1"></i>
+            Create
+          </a>
+
+          <a href="#"
+             class="btn btn-primary d-sm-none btn-icon"
+             data-bs-toggle="modal"
+             data-bs-target="#modal-report">
+            <i class="fas fa-plus"></i>
+          </a>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- MOBILE SEARCH (BOTTOM ONLY) -->
+    <div class="row mt-3 d-md-none">
+      <div class="col-12">
+        <input
+          type="text"
+          id="searchPostsMobile"
+          class="form-control rounded-pill search-home"
+          placeholder="Search posts..."
+        >
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+{% endblock %}

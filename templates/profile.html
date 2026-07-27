@@ -1,0 +1,408 @@
+{% extends "theme/base.html" %}
+{% block content %}
+{% load static %}
+<!-- BEGIN PAGE HEADER -->
+<div class="page-header d-print-none" aria-label="Page header">
+  <div class="container-xl">
+
+    <div class="row align-items-center">
+
+      <!-- LEFT -->
+      <div class="col">
+
+        <div class="page-pretitle">Overview</div>
+
+        <!-- TITLE + SEARCH (DESKTOP ONLY) -->
+        <div class="d-flex align-items-center gap-3 flex-wrap d-none d-md-flex">
+
+          <h2 class="page-title mb-0">Profile Page</h2>
+
+        </div>
+
+        <!-- TITLE ONLY (MOBILE) -->
+        <h2 class="page-title mb-0 d-md-none">Home Page</h2>
+
+      </div>
+
+      <!-- RIGHT -->
+      <div class="col-auto">
+
+        <div class="btn-list">
+
+          <a href="{% url 'dashboard' %}" class="btn btn-1">
+            <i class="me-1"></i> Home
+          </a>
+
+          <a href="#"
+          class="btn btn-primary d-none d-sm-inline-block"
+          data-bs-toggle="modal"
+          data-bs-target="#editProfileModal">
+          <i class="fas fa-edit me-1"></i>
+          Edit
+        </a>
+
+        <a href="#"
+        class="btn btn-primary d-sm-none btn-icon"
+        data-bs-toggle="modal"
+        data-bs-target="#modal-report">
+        <i class="fas fa-plus"></i>
+      </a>
+
+    </div>
+  </div>
+
+</div>
+
+</div>
+</div>
+<br>
+<div class="container-xl">
+  <div class="card overflow-hidden mb-5">
+    <div class="row g-0" style="min-height: 550px;">
+
+      <!-- LEFT SIDE — Avatar Display -->
+      <!-- LEFT SIDE — Image -->
+      <div class="col-md-5 d-none d-md-block position-relative p-0"
+      style="min-height:550px;">
+
+      <img src="/media/posts/images/glenn.jpg"
+      alt="Cover"
+      style="width:100%; height:100%; object-fit:cover;">
+
+      <div style="
+      position:absolute;
+      inset:0;
+      background:rgba(0,0,0,0.15);
+      "></div>
+
+    </div>
+
+    <!-- RIGHT SIDE — Content -->
+    <div class="col-md-7 col-12 d-flex flex-column">
+      <div class="p-4 p-lg-5 flex-grow-1">
+
+        <!-- Tabs -->
+        <ul class="nav mb-4" id="profileTabs">
+          <li class="nav-item">
+            <a class="nav-link active" id="about-tab" href="#"
+            onclick="showTab('about', this); return false;">
+            About Me
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="posts-tab" href="#"
+          onclick="showTab('posts', this); return false;">
+          My Posts
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="activity-tab" href="#"
+        onclick="showTab('activity', this); return false;">
+        Activity
+      </a>
+    </li>
+  </ul>
+
+  <!-- About Me Tab -->
+  <div id="tab-about">
+
+    <h2 class="fw-bold mb-0">
+      {{ request.user.first_name }} {{ request.user.last_name }}
+    </h2>
+    <div class="text-secondary mb-3">@{{ request.user.username }}</div>
+
+    <p class="text-secondary">
+      Hi, I'm <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong>,
+      a member of this community since {{ request.user.date_joined|date:"F Y" }}.
+      I enjoy sharing posts and engaging with others in the community.
+    </p>
+
+    <h5 class="fw-bold mt-3 mb-2">About My Contributions</h5>
+    <p class="text-secondary">
+      I have created {{ total_posts }} posts, received {{ total_likes_received }} likes
+      and {{ total_comments_received }} comments from the community.
+    </p>
+
+    <hr>
+
+    <!-- Info -->
+    <div class="d-flex flex-column gap-2 mb-4">
+      <div class="d-flex align-items-center gap-2">
+        <i class="fas fa-envelope text-primary" style="width:16px;"></i>
+        <span class="text-secondary small">{{ request.user.email|default:"No email set" }}</span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <i class="fas fa-calendar text-primary" style="width:16px;"></i>
+        <span class="text-secondary small">Joined {{ request.user.date_joined|date:"F j, Y" }}</span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <i class="fas fa-clock text-primary" style="width:16px;"></i>
+        <span class="text-secondary small">Last login {{ request.user.last_login|date:"F j, Y" }}</span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-2 mb-4">
+      <div class="col-6 col-sm-3">
+        <div class="text-center p-3 rounded bg-primary-lt">
+          <div class="h3 mb-0 text-primary">{{ total_posts }}</div>
+          <div class="text-secondary" style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em;">Posts</div>
+        </div>
+      </div>
+      <div class="col-6 col-sm-3">
+        <div class="text-center p-3 rounded bg-success-lt">
+          <div class="h3 mb-0 text-success">{{ total_likes_received }}</div>
+          <div class="text-secondary" style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em;">Likes</div>
+        </div>
+      </div>
+      <div class="col-6 col-sm-3">
+        <div class="text-center p-3 rounded bg-info-lt">
+          <div class="h3 mb-0 text-info">{{ total_comments_received }}</div>
+          <div class="text-secondary" style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em;">Comments</div>
+        </div>
+      </div>
+      <div class="col-6 col-sm-3">
+        <div class="text-center p-3 rounded bg-warning-lt">
+          <div class="h3 mb-0 text-warning">{{ request.user.liked_comments.count }}</div>
+          <div class="text-secondary" style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em;">Given</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Posts Tab -->
+  <div id="tab-posts" style="display:none;">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h3 class="fw-bold mb-0">My Posts</h3>
+      <span class="badge bg-primary-lt text-primary">{{ total_posts }} total</span>
+    </div>
+
+    <div style="max-height: 380px; overflow-y: auto;">
+      {% if my_posts %}
+      {% for post in my_posts %}
+      <div class="d-flex align-items-start gap-3 py-3
+      {% if not forloop.last %}border-bottom{% endif %} post-item">
+
+      <span class="avatar flex-shrink-0
+      {% if post.image %}bg-blue-lt
+      {% elif post.video %}bg-red-lt
+      {% else %}bg-primary-lt{% endif %}">
+      {% if post.image %}
+      <i class="fas fa-image text-blue"></i>
+      {% elif post.video %}
+      <i class="fas fa-video text-red"></i>
+      {% else %}
+      <i class="fas fa-align-left text-primary"></i>
+      {% endif %}
+    </span>
+
+    <div class="flex-grow-1">
+      <div class="d-flex justify-content-between align-items-start">
+        <div class="fw-bold">{{ post.title|default:"Untitled" }}</div>
+        {% if post.public == 2 %}
+        <span class="badge bg-success-lt text-success ms-2">
+          <i class="fas fa-globe me-1"></i>Public
+        </span>
+        {% elif post.public == 1 %}
+        <span class="badge bg-secondary-lt text-secondary ms-2">
+          <i class="fas fa-lock me-1"></i>Only Me
+        </span>
+        {% endif %}
+      </div>
+      <div class="text-secondary small mt-1">
+        {{ post.content|truncatechars:100 }}
+      </div>
+      <div class="d-flex gap-3 mt-2">
+        <small class="text-secondary">
+          <i class="fas fa-calendar me-1"></i>{{ post.created_at|date:"M d, Y" }}
+        </small>
+        <small class="text-secondary">
+          <i class="fas fa-thumbs-up me-1 text-primary"></i>{{ post.likes.count }}
+        </small>
+        <small class="text-secondary">
+          <i class="fas fa-comment me-1 text-info"></i>{{ post.comments.count }}
+        </small>
+      </div>
+    </div>
+
+  </div>
+  {% endfor %}
+
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fas fa-feather-alt fa-3x text-secondary mb-3 d-block"></i>
+    <h4>No Posts Yet</h4>
+    <p class="text-muted mb-4">Share your thoughts with the world!</p>
+    <a href="{% url 'dashboard' %}" class="btn btn-primary">
+      <i class="fas fa-plus me-1"></i> Create Your First Post
+    </a>
+  </div>
+  {% endif %}
+</div>
+</div>
+
+<!-- Activity Tab -->
+<div id="tab-activity" style="display:none;">
+  <h3 class="fw-bold mb-4">Recent Activity</h3>
+  <div class="d-flex flex-column gap-3">
+
+    <div class="d-flex align-items-center gap-3 p-3 rounded bg-primary-lt">
+      <span class="avatar bg-primary">
+        <i class="fas fa-file-alt text-white"></i>
+      </span>
+      <div class="flex-grow-1">
+        <div class="fw-bold small">Posts Created</div>
+        <div class="text-secondary small">Total posts you have published</div>
+      </div>
+      <span class="badge bg-primary">{{ total_posts }}</span>
+    </div>
+
+    <div class="d-flex align-items-center gap-3 p-3 rounded bg-success-lt">
+      <span class="avatar bg-success">
+        <i class="fas fa-thumbs-up text-white"></i>
+      </span>
+      <div class="flex-grow-1">
+        <div class="fw-bold small">Likes Received</div>
+        <div class="text-secondary small">People who liked your content</div>
+      </div>
+      <span class="badge bg-success">{{ total_likes_received }}</span>
+    </div>
+
+    <div class="d-flex align-items-center gap-3 p-3 rounded bg-info-lt">
+      <span class="avatar bg-info">
+        <i class="fas fa-comment text-white"></i>
+      </span>
+      <div class="flex-grow-1">
+        <div class="fw-bold small">Comments Received</div>
+        <div class="text-secondary small">People who commented on your content</div>
+      </div>
+      <span class="badge bg-info">{{ total_comments_received }}</span>
+    </div>
+
+    <div class="d-flex align-items-center gap-3 p-3 rounded bg-warning-lt">
+      <span class="avatar bg-warning">
+        <i class="fas fa-heart text-white"></i>
+      </span>
+      <div class="flex-grow-1">
+        <div class="fw-bold small">Likes Given</div>
+        <div class="text-secondary small">Posts and comments you have liked</div>
+      </div>
+      <span class="badge bg-warning">{{ request.user.liked_comments.count }}</span>
+    </div>
+
+  </div>
+</div>
+
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal modal-blur fade" id="editProfileModal" tabindex="-1">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-edit me-2 text-primary"></i>Edit Profile
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{% url 'profiles:profile' %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label required">First Name</label>
+              <input type="text" name="first_name" class="form-control"
+              value="{{ request.user.first_name }}">
+            </div>
+            <div class="col-6">
+              <label class="form-label required">Last Name</label>
+              <input type="text" name="last_name" class="form-control"
+              value="{{ request.user.last_name }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label required">Email</label>
+              <input type="email" name="email" class="form-control"
+              value="{{ request.user.email }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label">
+                New Password
+                <span class="text-secondary small">(leave blank to keep current)</span>
+              </label>
+              <input type="password" name="password" class="form-control"
+              placeholder="Enter new password">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Confirm New Password</label>
+              <input type="password" name="confirm_password" class="form-control"
+              placeholder="Confirm new password">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i> Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .post-item {
+    transition: background-color 0.2s ease;
+    border-radius: 4px;
+  }
+  .post-item:hover {
+    background-color: var(--tblr-active-bg);
+  }
+  #profileTabs .nav-link {
+    color: var(--tblr-secondary);
+    font-weight: 500;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.6rem 1.2rem;
+    background: transparent;
+    border-radius: 6px;
+  }
+  #profileTabs .nav-link:hover {
+    color: var(--tblr-primary);
+    background: var(--tblr-primary-lt);
+  }
+  #profileTabs .nav-link.active {
+    background: var(--tblr-primary);
+    color: #fff !important;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+</style>
+
+<script>
+  function showTab(tab, el) {
+    document.getElementById('tab-about').style.display = 'none';
+    document.getElementById('tab-posts').style.display = 'none';
+    document.getElementById('tab-activity').style.display = 'none';
+
+    document.querySelectorAll('#profileTabs .nav-link').forEach(a => a.classList.remove('active'));
+
+    document.getElementById('tab-' + tab).style.display = '';
+    el.classList.add('active');
+
+    localStorage.setItem('profileTab', tab);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const savedTab = localStorage.getItem('profileTab') || 'about';
+    const tabEl = document.getElementById(savedTab + '-tab');
+    if (tabEl) showTab(savedTab, tabEl);
+  });
+</script>
+
+{% endblock %}
