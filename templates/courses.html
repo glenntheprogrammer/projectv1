@@ -1,0 +1,277 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <div class="page-header d-print-none" aria-label="Page header">
+    <div class="container-xl">
+      <div class="row align-items-center">
+        <div class="col">
+          <div class="page-pretitle">Overview</div>
+          <div class="d-flex align-items-center gap-3 flex-wrap d-none d-md-flex">
+            <h2 class="page-title mb-0">Course Management</h2>
+          </div>
+          <h2 class="page-title mb-0 d-md-none">Course Management</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+  <br>
+
+  <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-1">
+    <form method="GET" class="w-100" style="max-width: 420px;">
+      <div class="input-group">
+        <span class="input-group-text"><i class="ti ti-search"></i></span>
+        <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search by name, section, or school year...">
+        {% if query %}
+        <a href="{% url 'courses:course_list' %}" class="btn btn-outline-secondary">Clear</a>
+        {% endif %}
+        <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+    </form>
+
+    <button type="button" class="btn btn-primary mt-n4" data-bs-toggle="modal" data-bs-target="#courseModal" data-mode="create">
+      <i class='fas fa-plus-circle me-2'></i> Add Course
+    </button>
+  </div>
+
+  <div id="courseAlert" class="alert alert-danger d-none" role="alert"></div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        All Courses
+        {% if query %}
+        <span class="text-muted fw-normal">— search results for "{{ query }}"</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table" id="coursesTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Year & Section</th>
+            <th>School Year</th>
+            <th>Number of Students</th>
+            <th class="w-1">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="coursesTableBody">
+        {% for course in courses %}
+        <tr data-row-id="{{ course.courseid }}">
+            <td class="text-muted">{{ forloop.counter0|add:courses.start_index }}</td>
+            <td class="fw-medium">{{ course.name }}</td>
+            <td class="text-muted">{{ course.section }}</td>
+            <td class="text-muted">{{ course.schoolyr }}</td>
+            <td class="text-center">
+            <span class="badge bg-blue-lt">{{ course.student_count }}</span>
+            </td>
+            <td>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-ghost-primary btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#courseModal" data-mode="edit" data-id="{{ course.courseid }}" data-name="{{ course.name }}" data-section="{{ course.section }}" data-schoolyr="{{ course.schoolyr }}" title="Edit">
+                <i class="fas fa-edit"></i>
+                </button>
+                <a href="{% url 'students:student_list_by_course' course.courseid %}" class="btn btn-ghost-secondary btn-icon btn-sm" title="View Students">
+                <i class="fas fa-users"></i>
+                </a>
+                <button type="button" class="btn btn-ghost-danger btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#deleteCourseModal" data-id="{{ course.courseid }}" data-name="{{ course.name }}" title="Delete">
+                <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" class="text-center text-muted py-4">No courses found.</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if courses.paginator.num_pages > 1 %}
+    <div class="card-footer d-flex align-items-center">
+      <p class="m-0 text-muted">
+        Showing <span class="fw-medium">{{ courses.start_index }}</span>
+        to <span class="fw-medium">{{ courses.end_index }}</span>
+        of <span class="fw-medium">{{ courses.paginator.count }}</span> courses
+      </p>
+      <ul class="pagination m-0 ms-auto">
+        {% if courses.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ courses.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+            <i class="ti ti-chevron-left"></i> prev
+          </a>
+        </li>
+        {% endif %}
+        {% for num in courses.paginator.page_range %}
+        <li class="page-item {% if courses.number == num %}active{% endif %}">
+          <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+        </li>
+        {% endfor %}
+        {% if courses.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ courses.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+            next <i class="ti ti-chevron-right"></i>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="courseModal" tabindex="-1">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="courseModalTitle">Add Course</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="courseForm">
+        {% csrf_token %}
+        <input type="hidden" name="courseid" id="course_id">
+        <div class="modal-body">
+          <div id="courseFormError" class="alert alert-danger d-none"></div>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Course Name<n(event) {
+    const button = event.relatedTarget;
+    if (!button) {
+      resetForm();
+      return;
+    }/label>
+              <input type="text" name="name" id="course_name" class="form-control" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Year &amp; Section</label>
+              <input type="text" name="section" id="course_section" class="form-control" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">School Year</label>
+              <input type="text" name="schoolyr" id="course_schoolyr" class="form-control" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="courseSubmitBtn">Save Course</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="deleteCourseModal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Course</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong id="deleteCourseName"></strong>?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteCourseBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const modalEl = document.getElementById('courseModal');
+  const deleteModalEl = document.getElementById('deleteCourseModal');
+  const form = document.getElementById('courseForm');
+  const alertBox = document.getElementById('courseAlert');
+  const title = document.getElementById('courseModalTitle');
+  const submitBtn = document.getElementById('courseSubmitBtn');
+  const deleteBtn = document.getElementById('confirmDeleteCourseBtn');
+  const deleteName = document.getElementById('deleteCourseName');
+  let currentCourseId = null;
+
+  function resetForm() {
+    form.reset();
+    document.getElementById('course_id').value = '';
+    title.textContent = 'Add Course';
+    submitBtn.textContent = 'Save Course';
+    alertBox.classList.add('d-none');
+    alertBox.textContent = '';
+    currentCourseId = null;
+  }
+
+  modalEl.addEventListener('show.bs.modal', function(event) {
+    const button = event.relatedTarget;
+    if (!button) {
+      resetForm();
+      return;
+    }
+
+    const mode = button.getAttribute('data-mode');
+    if (mode === 'edit') {
+      const id = button.getAttribute('data-id');
+      title.textContent = 'Edit Course';
+      submitBtn.textContent = 'Update Course';
+      currentCourseId = id;
+      document.getElementById('course_id').value = id;
+      document.getElementById('course_name').value = button.getAttribute('data-name');
+      document.getElementById('course_section').value = button.getAttribute('data-section');
+      document.getElementById('course_schoolyr').value = button.getAttribute('data-schoolyr');
+    } else {
+      resetForm();
+    }
+  });
+10
+  deleteModalEl.addEventListener('show.bs.modal', function(event) {
+    const button = event.relatedTarget;
+    if (button) {
+      currentCourseId = button.getAttribute('data-id');
+      deleteName.textContent = button.getAttribute('data-name');
+    }
+  });
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(form);
+
+    fetch('{% url "courses:course_save_ajax" %}', {
+      method: 'POST',
+      headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value},
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        alertBox.textContent = data.error;
+        alertBox.classList.remove('d-none');
+        return;
+      }
+      window.location.reload();
+    })
+    .catch(() => {
+      alertBox.textContent = 'Something went wrong.';
+      alertBox.classList.remove('d-none');
+    });
+  });
+
+  deleteBtn.addEventListener('click', function() {
+    if (!currentCourseId) return;
+    fetch('/courses/ajax/delete/' + currentCourseId + '/', {
+      method: 'POST',
+      headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value}
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'deleted') {
+        window.location.reload();
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

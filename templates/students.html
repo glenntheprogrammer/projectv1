@@ -1,0 +1,348 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <div class="page-header d-print-none" aria-label="Page header">
+    <div class="container-xl">
+      <div class="row align-items-center">
+        <div class="col">
+          <div class="page-pretitle">Overview</div>
+          <div class="d-flex align-items-center gap-3 flex-wrap d-none d-md-flex">
+            <h2 class="page-title mb-0">Student Management</h2>
+          </div>
+          <h2 class="page-title mb-0 d-md-none">Student Management</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+  <br>
+
+  <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-1">
+    {% if selected_course_name %}
+    <div class="text-muted">Showing students for course: <strong>{{ selected_course_name }}</strong></div>
+    {% endif %}
+    <form method="GET" class="w-100" style="max-width: 420px;">
+      <div class="input-group">
+        <span class="input-group-text"><i class="ti ti-search"></i></span>
+        <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search by student ID, name, or course...">
+        {% if query %}
+        <a href="{% url 'students:student_list' %}" class="btn btn-outline-secondary">Clear</a>
+        {% endif %}
+        <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+    </form>
+
+    <button type="button" class="btn btn-primary mt-n3" data-bs-toggle="modal" data-bs-target="#studentModal" data-mode="create">
+      <i class="fas fa-plus-circle me-2"></i> Add Student
+    </button>
+  </div>
+
+  <div id="studentAlert" class="alert alert-danger d-none" role="alert"></div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        All Students
+        {% if query %}
+        <span class="text-muted fw-normal">— search results for "{{ query }}"</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table" id="studentsTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student ID</th>
+            <th>Full Name</th>
+            <th>Course</th>
+            <th class="w-1">Attendance</th>
+            <th class="w-1">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="studentsTableBody">
+  {% for student in students %}
+  <tr data-row-id="{{ student.id }}">
+    <td class="text-muted">{{ forloop.counter0|add:students_page.start_index }}</td>
+    <td class="fw-medium">{{ student.idno }}</td>
+    <td class="text-muted">{{ student.fullname }}</td>
+    <td class="text-muted">{{ student.course_display }}</td>
+    <td>
+      <div class="d-flex gap-2 align-items-center flex-row">
+        <label class="d-flex align-items-center gap-1 mb-0 px-2 py-1 rounded bg-success-lt">
+          <input class="form-check-input attendance-radio mt-0" type="radio" name="attendance-{{ student.id }}" value="1" data-student-id="{{ student.id }}" data-status="1">
+          <span class="text-success fw-semibold">P</span>
+        </label>
+        <label class="d-flex align-items-center gap-1 mb-0 px-2 py-1 rounded bg-warning-lt">
+          <input class="form-check-input attendance-radio mt-0" type="radio" name="attendance-{{ student.id }}" value="2" data-student-id="{{ student.id }}" data-status="2">
+          <span class="text-warning fw-semibold">L</span>
+        </label>
+        <label class="d-flex align-items-center gap-1 mb-0 px-2 py-1 rounded bg-danger-lt">
+          <input class="form-check-input attendance-radio mt-0" type="radio" name="attendance-{{ student.id }}" value="3" data-student-id="{{ student.id }}" data-status="3">
+          <span class="text-danger fw-semibold">A</span>
+        </label>
+        <label class="d-flex align-items-center gap-1 mb-0 px-2 py-1 rounded bg-info-lt">
+          <input class="form-check-input attendance-radio mt-0" type="radio" name="attendance-{{ student.id }}" value="4" data-student-id="{{ student.id }}" data-status="4">
+          <span class="text-info fw-semibold">E</span>
+        </label>
+      </div>
+    </td>
+    <td>
+      <div class="d-flex gap-2 align-items-center">
+        <a href="{% url 'attendance:attendance_calendar' student.id %}" class="btn btn-ghost-info btn-icon btn-sm" title="View Attendance Calendar">
+          <i class="fas fa-calendar-alt"></i>
+        </a>
+        <button type="button" class="btn btn-ghost-primary btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#studentModal" data-mode="edit" data-id="{{ student.id }}" data-idno="{{ student.idno }}" data-fullname="{{ student.fullname }}" data-courseid="{{ student.courseid }}" title="Edit">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button type="button" class="btn btn-ghost-danger btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#deleteStudentModal" data-id="{{ student.id }}" data-name="{{ student.fullname }}" title="Delete">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+    </td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="5" class="text-center text-muted py-4">No students found.</td>
+  </tr>
+  {% endfor %}
+</tbody>
+      </table>
+    </div>
+
+    {% if students_page.paginator.num_pages > 1 %}
+    <div class="card-footer d-flex align-items-center">
+      <p class="m-0 text-muted">
+        Showing <span class="fw-medium">{{ students_page.start_index }}</span>
+        to <span class="fw-medium">{{ students_page.end_index }}</span>
+        of <span class="fw-medium">{{ students_page.paginator.count }}</span> students
+      </p>
+      <ul class="pagination m-0 ms-auto">
+        {% if students_page.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ students_page.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_course_id %}&course_id={{ selected_course_id }}{% endif %}">
+            <i class="ti ti-chevron-left"></i> prev
+          </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+          <span class="page-link"><i class="ti ti-chevron-left"></i> prev</span>
+        </li>
+        {% endif %}
+
+        {% for num in students_page.paginator.page_range %}
+          {% if num == students_page.number %}
+          <li class="page-item active">
+            <span class="page-link">{{ num }}</span>
+          </li>
+          {% else %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_course_id %}&course_id={{ selected_course_id }}{% endif %}">{{ num }}</a>
+          </li>
+          {% endif %}
+        {% endfor %}
+
+        {% if students_page.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ students_page.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_course_id %}&course_id={{ selected_course_id }}{% endif %}">
+            next <i class="ti ti-chevron-right"></i>
+          </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+          <span class="page-link">next <i class="ti ti-chevron-right"></i></span>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="studentModal" tabindex="-1">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="studentModalTitle">Add Student</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="studentForm">
+        {% csrf_token %}
+        <input type="hidden" name="id" id="student_id">
+        <div class="modal-body">
+          <div id="studentFormError" class="alert alert-danger d-none"></div>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Student ID Number</label>
+              <input type="text" name="idno" id="student_idno" class="form-control" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Full Name</label>
+              <input type="text" name="fullname" id="student_fullname" class="form-control" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Course</label>
+              <select name="courseid" id="student_courseid" class="form-select" required>
+                <option value="">Select course</option>
+                {% for course in courses %}
+                <option value="{{ course.courseid }}">{{ course.name }} - {{ course.section }} ({{ course.schoolyr }})</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="studentSubmitBtn">Save Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="deleteStudentModal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Student</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong id="deleteStudentName"></strong>?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteStudentBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const modalEl = document.getElementById('studentModal');
+  const deleteModalEl = document.getElementById('deleteStudentModal');
+  const form = document.getElementById('studentForm');
+  const alertBox = document.getElementById('studentAlert');
+  const title = document.getElementById('studentModalTitle');
+  const submitBtn = document.getElementById('studentSubmitBtn');
+  const deleteBtn = document.getElementById('confirmDeleteStudentBtn');
+  const deleteName = document.getElementById('deleteStudentName');
+  let currentStudentId = null;
+
+  function resetForm() {
+    form.reset();
+    document.getElementById('student_id').value = '';
+    title.textContent = 'Add Student';
+    submitBtn.textContent = 'Save Student';
+    alertBox.classList.add('d-none');
+    alertBox.textContent = '';
+    currentStudentId = null;
+  }
+
+  modalEl.addEventListener('show.bs.modal', function(event) {
+    const button = event.relatedTarget;
+    if (!button) {
+      resetForm();
+      return;
+    }
+
+    const mode = button.getAttribute('data-mode');
+    if (mode === 'edit') {
+      const id = button.getAttribute('data-id');
+      title.textContent = 'Edit Student';
+      submitBtn.textContent = 'Update Student';
+      currentStudentId = id;
+      document.getElementById('student_id').value = id;
+      document.getElementById('student_idno').value = button.getAttribute('data-idno');
+      document.getElementById('student_fullname').value = button.getAttribute('data-fullname');
+      document.getElementById('student_courseid').value = button.getAttribute('data-courseid');
+    } else {
+      resetForm();
+    }
+  });
+
+  deleteModalEl.addEventListener('show.bs.modal', function(event) {
+    const button = event.relatedTarget;
+    if (button) {
+      currentStudentId = button.getAttribute('data-id');
+      deleteName.textContent = button.getAttribute('data-name');
+    }
+  });
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(form);
+
+    fetch('{% url "students:student_save_ajax" %}', {
+      method: 'POST',
+      headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value},
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        alertBox.textContent = data.error;
+        alertBox.classList.remove('d-none');
+        return;
+      }
+      window.location.reload();
+    })
+    .catch(() => {
+      alertBox.textContent = 'Something went wrong.';
+      alertBox.classList.remove('d-none');
+    });
+  });
+
+  deleteBtn.addEventListener('click', function() {
+    if (!currentStudentId) return;
+    fetch('/students/ajax/delete/' + currentStudentId + '/', {
+      method: 'POST',
+      headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value}
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'deleted') {
+        window.location.reload();
+      }
+    });
+  });
+
+  document.querySelectorAll('.attendance-radio').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      const formData = new FormData();
+      formData.append('student_id', this.getAttribute('data-student-id'));
+      formData.append('status', this.getAttribute('data-status'));
+
+      fetch('{% url "attendance:attendance_save_ajax" %}', {
+        method: 'POST',
+        headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value},
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alertBox.textContent = data.error;
+          alertBox.classList.remove('d-none');
+          return;
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'position-fixed top-0 end-0 m-3 alert alert-success shadow-sm';
+        toast.style.zIndex = '1080';
+        toast.innerHTML = '<i class="fas fa-check-circle me-2"></i> ' + data.student + ' marked as ' + data.label;
+        document.body.appendChild(toast);
+        setTimeout(function() {
+          toast.remove();
+        }, 2200);
+      })
+      .catch(function() {
+        alertBox.textContent = 'Attendance could not be saved.';
+        alertBox.classList.remove('d-none');
+      });
+    });
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <div class="page-header d-print-none" aria-label="Page header">
+    <div class="container-xl">
+      <div class="row align-items-center">
+        <div class="col">
+          <div class="page-pretitle">Attendance</div>
+          <h2 class="page-title mb-0">Attendance Calendar</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-3">
+    <div class="card-header">
+      <div class="card-title">
+        {{ student.fullname }} <span class="text-muted">({{ student.idno }})</span>
+      </div>
+      <div class="card-actions d-flex gap-2">
+        <a href="?year={{ prev_month.year }}&month={{ prev_month.month }}" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-chevron-left me-1"></i> Prev
+        </a>
+        <a href="?year={{ current_year }}&month={{ current_month }}" class="btn btn-outline-primary btn-sm">Today</a>
+        <a href="?year={{ next_month.year }}&month={{ next_month.month }}" class="btn btn-outline-secondary btn-sm">
+          Next <i class="fas fa-chevron-right ms-1"></i>
+        </a>
+        <a href="{% url 'students:student_list' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-arrow-left me-2"></i>Back
+        </a>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">{{ month_label }}</h3>
+        <span class="text-muted">Attendance overview for this month</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle text-center">
+          <thead>
+            <tr>
+              <th>Sun</th>
+              <th>Mon</th>
+              <th>Tue</th>
+              <th>Wed</th>
+              <th>Thu</th>
+              <th>Fri</th>
+              <th>Sat</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for week in calendar_weeks %}
+            <tr>
+              {% for day in week %}
+              <td class="p-2 align-top {% if day.record %}{{ day.css_class }}{% elif day.is_today %}table-light border border-primary{% else %}table-light{% endif %}" style="min-width: 100px; height: 110px;">
+                {% if day.day %}
+                <div class="d-flex flex-column h-100">
+                  <div class="fw-semibold mb-2">{{ day.day }}</div>
+                  {% if day.record %}
+                  <span class="badge bg-white text-dark align-self-center">{{ day.label }}</span>
+                  {% else %}
+                  <span class="text-muted small">No entry</span>
+                  {% endif %}
+                </div>
+                {% endif %}
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

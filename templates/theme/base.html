@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
     <title>
-      Azuelo Technology
+      SMART Attendance
     </title>
     <link rel="icon" href="./favicon-dev.ico" type="image/x-icon"/>
     <link rel="shortcut icon" href="./favicon-dev.ico" type="image/x-icon"/>
@@ -55,6 +55,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/tabler.min.js' %}"></script>
     <script src="{% static 'js/custom.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         window.tabler_chart = window.tabler_chart || {};

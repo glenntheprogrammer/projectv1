@@ -7,6 +7,7 @@
   aria-controls="offcanvasSettings"
   aria-label="Theme Settings"
   >
+  <!-- Download SVG icon from http://tabler.io/icons/icon/brush -->
   <svg
   xmlns="http://www.w3.org/2000/svg"
   width="24"
@@ -418,6 +419,7 @@ id="offcanvasSettings"
 
   <div class="mt-auto space-y">
     <button type="button" class="btn w-100" id="reset-changes">
+      <!-- Download SVG icon from http://tabler.io/icons/icon/rotate -->
       <svg
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -480,7 +482,7 @@ id="offcanvasSettings"
 
       for (var key in themeConfig) {
         if (name === key) {
-          document.documentElement.setAttribut  <!-- Download SVG icon from http://tabler.io/icons/icon/brush -->("data-bs-" + key, value);
+          document.documentElement.setAttribute("data-bs-" + key, value);
           window.localStorage.setItem("tabler-" + key, value);
           url.searchParams.set(key, value);
         }

@@ -6,9 +6,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.db import models
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
+
+from apps.attendance.models import Tblattendance
+from apps.courses.models import Tblcourse
+from apps.students.models import Tblstudents
 
 User = get_user_model()
 
@@ -140,7 +145,36 @@ def logout_view(request):
 
 @login_required(login_url='login')
 def dashboard(request):
-    return render(request, 'home.html')
+    total_courses = Tblcourse.objects.count()
+    total_students = Tblstudents.objects.count()
+    total_attendance_records = Tblattendance.objects.count()
+
+    attendance_status_counts = Tblattendance.objects.values('status').annotate(count=models.Count('status'))
+    status_map = {item['status'].lower(): item['count'] for item in attendance_status_counts}
+
+    present_count = status_map.get('present', 0)
+    late_count = status_map.get('late', 0)
+    absent_count = status_map.get('absent', 0)
+    excused_count = status_map.get('excused', 0)
+
+    attendance_breakdown = [
+        {'label': 'Present', 'value': present_count, 'color': '#2fb344'},
+        {'label': 'Late', 'value': late_count, 'color': '#f59f00'},
+        {'label': 'Absent', 'value': absent_count, 'color': '#d63939'},
+        {'label': 'Excused', 'value': excused_count, 'color': '#206bc4'},
+    ]
+
+    context = {
+        'total_courses': total_courses,
+        'total_students': total_students,
+        'total_attendance_records': total_attendance_records,
+        'present_count': present_count,
+        'late_count': late_count,
+        'absent_count': absent_count,
+        'excused_count': excused_count,
+        'attendance_breakdown': attendance_breakdown,
+    }
+    return render(request, 'home.html', context)
 
 
 @require_http_methods(['GET', 'POST'])

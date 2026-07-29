@@ -40,6 +40,10 @@ INSTALLED_APPS = [
 
     'apps.core',
     'apps.profiles',
+    'apps.courses',
+    'apps.students',
+    'apps.attendance',
+    'apps.reports',
 ]
 
 MIDDLEWARE = [
@@ -78,7 +82,7 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'crudtabler_db',
+        'NAME': 'kccattendance',
         'USER': 'phpmyadmin',
         'PASSWORD': '1234',
         'HOST': 'localhost',
