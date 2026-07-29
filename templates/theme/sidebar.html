@@ -1,22 +1,16 @@
-<!--  BEGIN SIDEBAR  -->
 <aside class="navbar navbar-vertical navbar-expand-lg navbar-transparent">
   <div class="container-fluid">
-<!-- BEGIN NAVBAR LOGO -->
 <div class="navbar-brand navbar-brand-autodark">
   <a href="." class="d-flex align-items-center gap-2 text-decoration-none">
-    <!-- ICON: fixed pixel size, scales down on mobile via CSS below -->
     <img src="/media/posts/images/azuelo.jpeg"
       alt="DollarHeist logo"
       class="dh-navbar-logo">
-    <!-- BRAND TEXT -->
     <span class="fw-bold fs-3 text-body dh-navbar-text">
       Azuelo <span class="text-primary">Technology</span>
     </span>
   </a>
 </div>
-<!-- END NAVBAR LOGO -->
 
-<!-- BEGIN NAVBAR TOGGLER -->
 <button
   class="navbar-toggler"
   type="button"
@@ -28,56 +22,10 @@
   >
   <span class="navbar-toggler-icon"></span>
 </button>
-<!-- END NAVBAR TOGGLER -->
-
-<style>
-  .dh-navbar-logo {
-    width: 45px;
-    height: 45px;
-    object-fit: cover;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .dh-navbar-text {
-    white-space: nowrap;
-    line-height: 1.1;
-  }
-
-  /* Tablet and below */
-  @media (max-width: 767.98px) {
-    .dh-navbar-logo {
-      width: 32px;
-      height: 32px;
-    }
-
-    .dh-navbar-text {
-      font-size: 1.1rem !important;
-    }
-  }
-
-  /* Small phones */
-  @media (max-width: 375px) {
-    .dh-navbar-logo {
-      width: 30px;
-      height: 30px;
-    }
-
-    .dh-navbar-text {
-      font-size: 0.95rem !important;
-    }
-
-    .navbar-brand {
-      padding-left: 4px;
-    }
-  }
-</style>
 
     <div class="collapse navbar-collapse" id="sidebar-menu">
-     <!-- BEGIN NAVBAR MENU -->
         <ul class="navbar-nav pt-lg-3">
 
-          <!-- LABEL -->
           <li class="nav-item">
             <span class="nav-link-title text-secondary small px-3 mb-1">
               Sidebar
@@ -123,8 +71,49 @@
           {% endif %}
 
         </ul>
-        <!-- END NAVBAR MENU -->
     </div>
   </div>
 </aside>
-<!--  END SIDEBAR  -->
+
+<style>
+  .dh-navbar-logo {
+    width: 45px;
+    height: 45px;
+    object-fit: cover;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dh-navbar-text {
+    white-space: nowrap;
+    line-height: 1.1;
+  }
+
+  /* Tablet and below */
+  @media (max-width: 767.98px) {
+    .dh-navbar-logo {
+      width: 32px;
+      height: 32px;
+    }
+
+    .dh-navbar-text {
+      font-size: 1.1rem !important;
+    }
+  }
+
+  /* Small phones */
+  @media (max-width: 375px) {
+    .dh-navbar-logo {
+      width: 30px;
+      height: 30px;
+    }
+
+    .dh-navbar-text {
+      font-size: 0.95rem !important;
+    }
+
+    .navbar-brand {
+      padding-left: 4px;
+    }
+  }
+</style>
