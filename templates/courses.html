@@ -82,6 +82,9 @@
                 <a href="{% url 'students:student_list_by_course' course.courseid %}" class="btn btn-ghost-secondary btn-icon btn-sm" title="View Students">
                 <i class="fas fa-users"></i>
                 </a>
+                <a href="{% url 'courses:quiz_list' course.courseid %}" class="btn btn-ghost-info btn-icon btn-sm" title="Manage Quizzes">
+                <i class="fas fa-question-circle"></i>
+                </a>
                 <button type="button" class="btn btn-ghost-danger btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#deleteCourseModal" data-id="{{ course.courseid }}" data-name="{{ course.name }}" title="Delete">
                 <i class="fas fa-trash-alt"></i>
                 </button>

@@ -1,0 +1,227 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <div class="page-header d-print-none" aria-label="Page header">
+    <div class="container-xl">
+      <div class="row align-items-center">
+        <div class="col">
+          <div class="page-pretitle">Course Management</div>
+          <h2 class="page-title mb-0">Quizzes for {{ course.name }}</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+  <br>
+
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Create / Edit Quiz</h3>
+        </div>
+        <div class="card-body">
+          <form method="post" action="{% url 'courses:quiz_save' course.courseid %}">
+            {% csrf_token %}
+            <input type="hidden" name="quiz_id" value="{{ selected_quiz.id|default_if_none:'' }}">
+            <div class="mb-3">
+              <label class="form-label">Quiz Title</label>
+              <input type="text" name="title" class="form-control" value="{{ selected_quiz.title|default_if_none:'' }}" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea name="description" class="form-control" rows="3">{{ selected_quiz.description|default_if_none:'' }}</textarea>
+            </div>
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" name="is_active" {% if selected_quiz and selected_quiz.is_active %}checked{% elif not selected_quiz %}checked{% endif %}>
+              <label class="form-check-label">Active</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Quiz</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title">Quizzes</h3>
+          <a href="{% url 'courses:course_list' %}" class="btn btn-outline-secondary btn-sm">Back to Courses</a>
+        </div>
+        <div class="card-body">
+          {% if quizzes %}
+          <div class="list-group">
+            {% for quiz in quizzes %}
+            <div class="list-group-item">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h4 class="mb-1">{{ quiz.title }}</h4>
+                  <p class="text-muted mb-2">{{ quiz.description|default:"No description" }}</p>
+                  <span class="badge {% if quiz.is_active %}bg-success-lt text-success{% else %}bg-secondary-lt text-secondary{% endif %}">
+                    {% if quiz.is_active %}Active{% else %}Inactive{% endif %}
+                  </span>
+                </div>
+                <div class="d-flex gap-2">
+                  <a href="{% url 'courses:quiz_preview' quiz.id %}" class="btn btn-sm btn-outline-info">Preview</a>
+                  <a href="{% url 'courses:quiz_list' course.courseid %}?quiz_id={{ quiz.id }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                  <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteQuizModal" data-id="{{ quiz.id }}" data-title="{{ quiz.title }}">Delete</button>
+                </div>
+              </div>
+
+              <hr>
+              <h5 class="mb-2">Questions</h5>
+              <form method="post" action="{% url 'courses:question_save' quiz.id %}" class="border rounded p-3 mb-3">
+                {% csrf_token %}
+                <div class="mb-2">
+                  <label class="form-label">Question Type</label>
+                  <select name="question_type" class="form-select" style="max-width: 220px;" onchange="toggleQuestionFields(this, '{{ quiz.id }}')">
+                    <option value="multiple_choice">Multiple Choice</option>
+                    <option value="true_false">True/False</option>
+                    <option value="identification">Identification</option>
+                  </select>
+                </div>
+                <div class="mb-2">
+                  <label class="form-label">Question</label>
+                  <textarea name="question_text" class="form-control" rows="2" required></textarea>
+                </div>
+                <div class="row g-2" id="options-{{ quiz.id }}">
+                  <div class="col-md-6 mb-2">
+                    <label class="form-label">Option A</label>
+                    <input type="text" name="option_a" class="form-control">
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <label class="form-label">Option B</label>
+                    <input type="text" name="option_b" class="form-control">
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <label class="form-label">Option C</label>
+                    <input type="text" name="option_c" class="form-control">
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <label class="form-label">Option D</label>
+                    <input type="text" name="option_d" class="form-control">
+                  </div>
+                </div>
+                <div class="mb-2" id="correct-{{ quiz.id }}">
+                  <label class="form-label">Correct Answer</label>
+                  <select name="correct_option" class="form-select" style="max-width: 220px;">
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                  </select>
+                </div>
+                <div class="mb-2 d-none" id="answer-{{ quiz.id }}">
+                  <label class="form-label">Answer</label>
+                  <input type="text" name="identification_answer" class="form-control" placeholder="Enter the correct answer">
+                </div>
+                <button type="submit" class="btn btn-sm btn-primary">Add Question</button>
+              </form>
+
+              {% if quiz.questions.all %}
+              <ul class="list-group">
+                {% for question in quiz.questions.all %}
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                  <div>
+                    <div class="fw-medium">{{ question.question_text }}</div>
+                    <div class="text-muted small">A. {{ question.option_a }} | B. {{ question.option_b }} | C. {{ question.option_c }} | D. {{ question.option_d }}</div>
+                    <div class="text-muted small">Correct answer: {{ question.correct_option }}</div>
+                  </div>
+                  <form method="post" action="{% url 'courses:question_delete' question.id %}" onsubmit="return confirm('Delete this question?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                  </form>
+                </li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <div class="text-muted small">No questions yet.</div>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-muted">No quizzes created yet.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="deleteQuizModal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Quiz</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong id="deleteQuizName"></strong>?</p>
+        <form id="deleteQuizForm" method="post">
+          {% csrf_token %}
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteQuizBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleQuestionFields(select, quizId) {
+  const options = document.getElementById('options-' + quizId);
+  const correct = document.getElementById('correct-' + quizId);
+  const answer = document.getElementById('answer-' + quizId);
+
+  if (select.value === 'identification') {
+    options.classList.add('d-none');
+    correct.classList.add('d-none');
+    answer.classList.remove('d-none');
+  } else if (select.value === 'true_false') {
+    options.classList.add('d-none');
+    correct.classList.remove('d-none');
+    answer.classList.add('d-none');
+    const selectAnswer = correct.querySelector('select');
+    if (selectAnswer) {
+      selectAnswer.innerHTML = '<option value="True">True</option><option value="False">False</option>';
+    }
+  } else {
+    options.classList.remove('d-none');
+    correct.classList.remove('d-none');
+    answer.classList.add('d-none');
+    const selectAnswer = correct.querySelector('select');
+    if (selectAnswer) {
+      selectAnswer.innerHTML = '<option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>';
+    }
+  }
+}
+
+(function () {
+  const deleteModalEl = document.getElementById('deleteQuizModal');
+  const deleteForm = document.getElementById('deleteQuizForm');
+  const deleteName = document.getElementById('deleteQuizName');
+  const confirmDeleteBtn = document.getElementById('confirmDeleteQuizBtn');
+  let currentQuizId = null;
+
+  deleteModalEl.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    if (!button) return;
+
+    currentQuizId = button.getAttribute('data-id');
+    deleteName.textContent = button.getAttribute('data-title') || 'this quiz';
+  });
+
+  confirmDeleteBtn.addEventListener('click', function () {
+    if (!currentQuizId) return;
+
+    const actionUrl = '{% url "courses:quiz_delete" course.courseid 0 %}'.replace('/0/', '/' + currentQuizId + '/');
+    deleteForm.action = actionUrl;
+    deleteForm.submit();
+  });
+})();
+</script>
+{% endblock %}

@@ -47,25 +47,6 @@
             </a>
           </li>
 
-          <!-- <li class="nav-item mb-1">
-            <a class="nav-link" href="{% url 'profiles:profile' %}">
-              <span class="nav-link-icon d-md-none d-lg-inline-block">
-                <i class="fas fa-user-alt"></i>
-              </span>
-              <span class="nav-link-title">Profile</span>
-            </a>
-          </li> -->
-
-          {% if user.is_authenticated %}
-          <!-- <li class="nav-item">
-            <a class="nav-link" href="{% url 'users:user_list' %}">
-              <span class="nav-link-icon d-md-none d-lg-inline-block">
-                <i class="nav-icon fas fa-user-lock"></i>
-              </span>
-              <span class="nav-link-title">Users</span>
-            </a>
-          </li> -->
-
             <li class="nav-item mt-2">
             <span class="nav-link-title text-secondary small px-3 mb-1">
               Course Management
@@ -88,7 +69,29 @@
               <span class="nav-link-title">Students</span>
             </a>
           </li>
+           <li class="nav-item">
+            <span class="nav-link-title text-secondary small px-3 mb-1">
+              Settings
+            </span>
+          </li>
+          <!-- <li class="nav-item mb-1">
+            <a class="nav-link" href="{% url 'profiles:profile' %}">
+              <span class="nav-link-icon d-md-none d-lg-inline-block">
+                <i class="fas fa-user-alt"></i>
+              </span>
+              <span class="nav-link-title">Profile</span>
+            </a>
+          </li> -->
 
+          {% if user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'users:user_list' %}">
+              <span class="nav-link-icon d-md-none d-lg-inline-block">
+                <i class="nav-icon fas fa-user-lock"></i>
+              </span>
+              <span class="nav-link-title">Users</span>
+            </a>
+          </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'logout' %}">
               <span class="nav-link-icon d-md-none d-lg-inline-block">

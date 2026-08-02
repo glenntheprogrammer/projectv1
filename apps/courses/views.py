@@ -1,12 +1,15 @@
-from django.shortcuts import render, get_object_or_404
+import json
+
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.db.models import Q, Count
+from django.template.loader import render_to_string
 
-from .models import Tblcourse
+from .models import Tblcourse, Quiz, QuizQuestion
 from apps.students.models import Tblstudents
 
 @login_required(login_url='login')
@@ -125,3 +128,151 @@ def course_delete_ajax(request, pk):
     course = get_object_or_404(Tblcourse, pk=pk)
     course.delete()
     return JsonResponse({'status': 'deleted'})
+
+
+@login_required(login_url='login')
+def quiz_list_page(request, course_id):
+    course = get_object_or_404(Tblcourse, pk=course_id)
+    quizzes = course.quizzes.all().order_by('-created_at')
+    selected_quiz_id = request.GET.get('quiz_id', '').strip()
+    selected_quiz = None
+
+    if selected_quiz_id:
+        selected_quiz = course.quizzes.filter(pk=selected_quiz_id).first()
+
+    return render(request, 'courses/quizzes.html', {
+        'course': course,
+        'quizzes': quizzes,
+        'selected_quiz': selected_quiz,
+    })
+
+
+@login_required(login_url='login')
+def quiz_preview_page(request, quiz_id):
+    quiz = get_object_or_404(Quiz, pk=quiz_id)
+    questions = quiz.questions.all().order_by('order', 'id')
+    questions_data = [
+        {
+            'id': question.id,
+            'text': question.question_text,
+            'type': question.question_type,
+            'option_a': question.option_a,
+            'option_b': question.option_b,
+            'option_c': question.option_c,
+            'option_d': question.option_d,
+            'correct': question.correct_option,
+        }
+        for question in questions
+    ]
+
+    return render(request, 'courses/quiz_preview.html', {
+        'quiz': quiz,
+        'questions': questions,
+        'questions_data': json.dumps(questions_data),
+    })
+
+
+@login_required(login_url='login')
+@require_POST
+def quiz_save_view(request, course_id):
+    course = get_object_or_404(Tblcourse, pk=course_id)
+    quiz_id = request.POST.get('quiz_id', '').strip()
+
+    if quiz_id:
+        quiz = get_object_or_404(Quiz, pk=quiz_id, course=course)
+    else:
+        quiz = Quiz(course=course)
+
+    title = request.POST.get('title', '').strip()
+    description = request.POST.get('description', '').strip()
+    is_active = request.POST.get('is_active') == 'on'
+
+    if not title:
+        return redirect('courses:quiz_list', course_id=course.courseid)
+
+    quiz.title = title
+    quiz.description = description
+    quiz.is_active = is_active
+    quiz.save()
+
+    return redirect('courses:quiz_list', course_id=course.courseid)
+
+
+@login_required(login_url='login')
+@require_POST
+def quiz_delete_view(request, course_id, quiz_id):
+    quiz = get_object_or_404(Quiz, pk=quiz_id, course__courseid=course_id)
+    quiz.delete()
+    return redirect('courses:quiz_list', course_id=course_id)
+
+
+@login_required(login_url='login')
+@require_POST
+def question_save_view(request, quiz_id):
+    quiz = get_object_or_404(Quiz, pk=quiz_id)
+    question_text = request.POST.get('question_text', '').strip()
+    question_type = request.POST.get('question_type', 'multiple_choice').strip().lower()
+    option_a = request.POST.get('option_a', '').strip()
+    option_b = request.POST.get('option_b', '').strip()
+    option_c = request.POST.get('option_c', '').strip()
+    option_d = request.POST.get('option_d', '').strip()
+    correct_option = request.POST.get('correct_option', '').strip()
+    identification_answer = request.POST.get('identification_answer', '').strip()
+
+    if question_type == 'true_false':
+        option_a = 'True'
+        option_b = 'False'
+        if correct_option not in {'True', 'False'}:
+            correct_option = 'True'
+    elif question_type == 'identification':
+        correct_option = identification_answer
+        option_a = ''
+        option_b = ''
+        option_c = ''
+        option_d = ''
+
+    if question_type == 'identification':
+        if not question_text or not correct_option:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == '1':
+                return JsonResponse({'error': 'Question text and answer are required.'}, status=400)
+            return redirect('courses:quiz_list', course_id=quiz.course.courseid)
+    else:
+        if not question_text or not option_a or not option_b:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == '1':
+                return JsonResponse({'error': 'Question text and options are required.'}, status=400)
+            return redirect('courses:quiz_list', course_id=quiz.course.courseid)
+
+    QuizQuestion.objects.create(
+        quiz=quiz,
+        question_text=question_text,
+        question_type=question_type,
+        option_a=option_a,
+        option_b=option_b,
+        option_c=option_c,
+        option_d=option_d,
+        correct_option=correct_option,
+        order=quiz.questions.count() + 1,
+    )
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == '1':
+        questions_html = render_to_string(
+            'courses/partials/question_list.html',
+            {'questions': quiz.questions.all().order_by('order', 'id')},
+            request=request,
+        )
+        return JsonResponse({
+            'status': 'success',
+            'question_count': quiz.questions.count(),
+            'questions_html': questions_html,
+        })
+
+    return redirect('courses:quiz_list', course_id=quiz.course.courseid)
+
+
+@login_required(login_url='login')
+@require_POST
+def question_delete_view(request, question_id):
+    question = get_object_or_404(QuizQuestion, pk=question_id)
+    course_id = question.quiz.course.courseid
+    question.delete()
+    return redirect('courses:quiz_list', course_id=course_id)

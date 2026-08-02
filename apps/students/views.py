@@ -4,8 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db import IntegrityError
-from django.db.models import Q
+from django.db.models import Q, Count
 
+from apps.attendance.models import Tblattendance
 from apps.courses.models import Tblcourse
 from .models import Tblstudents
 
@@ -57,12 +58,21 @@ def student_list_page(request, course_id=None):
 
     student_rows = []
     for student in students:
+        attendance_counts = Tblattendance.objects.filter(student_id=student).values('status').annotate(count=Count('status'))
+        attendance_map = {item['status']: item['count'] for item in attendance_counts}
+
         student_rows.append({
             'id': student.id,
             'idno': student.idno,
             'fullname': student.fullname,
             'courseid': student.courseid,
             'course_display': _get_course_display(student.courseid),
+            'attendance_counts': {
+                'present_count': attendance_map.get('1', 0),
+                'late_count': attendance_map.get('2', 0),
+                'absent_count': attendance_map.get('3', 0),
+                'excused_count': attendance_map.get('4', 0),
+            },
         })
 
     return render(request, 'students.html', {

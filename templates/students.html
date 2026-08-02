@@ -67,23 +67,43 @@
     <td class="text-muted">{{ student.fullname }}</td>
     <td class="text-muted">{{ student.course_display }}</td>
     <td>
-      <div class="d-flex gap-2 align-items-center flex-row">
-        <label class="d-flex align-items-center gap-1 mb-0 px-2 py-1 rounded bg-success-lt">
-          <input class="form-check-input attendance-radio mt-0" type="radio" name="attendance-{{ student.id }}" value="1" data-student-id="{{ student.id }}" data-status="1">
-          <span class="text-success fw-semibold">P</span>
-        </label>
-        <label class="d-flex align-items-center gap-1 mb-0 px-2 py-1 rounded bg-warning-lt">
-          <input class="form-check-input attendance-radio mt-0" type="radio" name="attendance-{{ student.id }}" value="2" data-student-id="{{ student.id }}" data-status="2">
-          <span class="text-warning fw-semibold">L</span>
-        </label>
-        <label class="d-flex align-items-center gap-1 mb-0 px-2 py-1 rounded bg-danger-lt">
-          <input class="form-check-input attendance-radio mt-0" type="radio" name="attendance-{{ student.id }}" value="3" data-student-id="{{ student.id }}" data-status="3">
-          <span class="text-danger fw-semibold">A</span>
-        </label>
-        <label class="d-flex align-items-center gap-1 mb-0 px-2 py-1 rounded bg-info-lt">
-          <input class="form-check-input attendance-radio mt-0" type="radio" name="attendance-{{ student.id }}" value="4" data-student-id="{{ student.id }}" data-status="4">
-          <span class="text-info fw-semibold">E</span>
-        </label>
+      <div class="d-flex gap-2 align-items-start flex-row">
+        <div class="d-flex flex-column align-items-center">
+          <label class="d-flex flex-column align-items-center justify-content-center mb-0 px-2 py-1 rounded bg-success-lt">
+            <span class="badge rounded-pill bg-success text-white mb-1">{{ student.attendance_counts.present_count }}</span>
+            <span class="d-flex align-items-center gap-1">
+              <input class="form-check-input attendance-radio mt-0" type="radio" name="attendance-{{ student.id }}" value="1" data-student-id="{{ student.id }}" data-status="1">
+              <span class="text-success fw-semibold">P</span>
+            </span>
+          </label>
+        </div>
+        <div class="d-flex flex-column align-items-center">
+          <label class="d-flex flex-column align-items-center justify-content-center mb-0 px-2 py-1 rounded bg-warning-lt">
+            <span class="badge rounded-pill bg-warning text-dark mb-1">{{ student.attendance_counts.late_count }}</span>
+            <span class="d-flex align-items-center gap-1">
+              <input class="form-check-input attendance-radio mt-0" type="radio" name="attendance-{{ student.id }}" value="2" data-student-id="{{ student.id }}" data-status="2">
+              <span class="text-warning fw-semibold">L</span>
+            </span>
+          </label>
+        </div>
+        <div class="d-flex flex-column align-items-center">
+          <label class="d-flex flex-column align-items-center justify-content-center mb-0 px-2 py-1 rounded bg-danger-lt">
+            <span class="badge rounded-pill bg-danger text-white mb-1">{{ student.attendance_counts.absent_count }}</span>
+            <span class="d-flex align-items-center gap-1">
+              <input class="form-check-input attendance-radio mt-0" type="radio" name="attendance-{{ student.id }}" value="3" data-student-id="{{ student.id }}" data-status="3">
+              <span class="text-danger fw-semibold">A</span>
+            </span>
+          </label>
+        </div>
+        <div class="d-flex flex-column align-items-center">
+          <label class="d-flex flex-column align-items-center justify-content-center mb-0 px-2 py-1 rounded bg-info-lt">
+            <span class="badge rounded-pill bg-info text-white mb-1">{{ student.attendance_counts.excused_count }}</span>
+            <span class="d-flex align-items-center gap-1">
+              <input class="form-check-input attendance-radio mt-0" type="radio" name="attendance-{{ student.id }}" value="4" data-student-id="{{ student.id }}" data-status="4">
+              <span class="text-info fw-semibold">E</span>
+            </span>
+          </label>
+        </div>
       </div>
     </td>
     <td>

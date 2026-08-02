@@ -1,0 +1,188 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <div class="page-header d-print-none" aria-label="Page header">
+    <div class="container-xl">
+      <div class="row align-items-center">
+        <div class="col">
+          <div class="page-pretitle">Course Management</div>
+          <h2 class="page-title mb-0">{{ quiz.title }} Quiz</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+  <br>
+
+  <script id="quiz-questions-data" type="application/json">{{ questions_data|safe }}</script>
+
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <div>
+        <h3 class="card-title mb-1">Timed Quiz</h3>
+        <div class="text-muted small">{{ quiz.description|default:"No description provided." }}</div>
+      </div>
+      <a href="{% url 'courses:quiz_list' quiz.course.courseid %}" class="btn btn-outline-secondary btn-sm">Back to Quizzes</a>
+    </div>
+    <div class="card-body">
+      {% if questions %}
+      <div id="quizStartScreen" class="text-center py-4">
+        <h4 class="mb-3">Ready to start?</h4>
+        <p class="text-muted">Each question will appear for 20 seconds before moving to the next one.</p>
+        <button id="startQuizBtn" class="btn btn-primary">Start Quiz</button>
+      </div>
+
+      <div id="quizRunningScreen" class="d-none">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="fw-medium">Question <span id="currentQuestionNumber">1</span> of {{ questions|length }}</div>
+          <div class="badge bg-danger-lt text-danger fs-4" id="timerDisplay">20s</div>
+        </div>
+        <div class="border rounded p-4" id="questionCard"></div>
+      </div>
+
+      <div id="quizFinishedScreen" class="d-none py-4">
+        <div class="text-center mb-4">
+          <h4 class="mb-3">Quiz Completed</h4>
+          <p class="text-muted">You have finished the quiz preview.</p>
+          <button id="reviewAnswersBtn" class="btn btn-primary">Show Questions and Answers</button>
+          <button id="restartQuizBtn" class="btn btn-outline-primary ms-2">Restart</button>
+        </div>
+        <div id="reviewAnswersContainer" class="d-none"></div>
+      </div>
+      {% else %}
+      <div class="text-muted">No questions have been added to this quiz yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const questions = JSON.parse(document.getElementById('quiz-questions-data').textContent);
+
+  const startScreen = document.getElementById('quizStartScreen');
+  const runningScreen = document.getElementById('quizRunningScreen');
+  const finishedScreen = document.getElementById('quizFinishedScreen');
+  const startBtn = document.getElementById('startQuizBtn');
+  const restartBtn = document.getElementById('restartQuizBtn');
+  const reviewAnswersBtn = document.getElementById('reviewAnswersBtn');
+  const reviewAnswersContainer = document.getElementById('reviewAnswersContainer');
+  const questionCard = document.getElementById('questionCard');
+  const timerDisplay = document.getElementById('timerDisplay');
+  const currentQuestionNumber = document.getElementById('currentQuestionNumber');
+
+  let currentIndex = 0;
+  let timer = null;
+  let timeLeft = 20;
+
+  function renderQuestion() {
+    if (!questions.length) return;
+    const question = questions[currentIndex];
+    currentQuestionNumber.textContent = currentIndex + 1;
+
+    let html = `<div class="fw-medium mb-3">${currentIndex + 1}. ${question.text}</div>`;
+
+    if (question.type === 'multiple_choice') {
+      html += `
+        <div class="text-muted">
+          <div>A. ${question.option_a}</div>
+          <div>B. ${question.option_b}</div>
+          <div>C. ${question.option_c}</div>
+          <div>D. ${question.option_d}</div>
+        </div>`;
+    } else if (question.type === 'true_false') {
+      html += `<div class="text-muted">True / False</div>`;
+    } else {
+      html += `<div class="text-muted">Identification</div>`;
+    }
+
+    questionCard.innerHTML = html;
+  }
+
+  function startTimer() {
+    clearInterval(timer);
+    timeLeft = 20;
+    timerDisplay.textContent = '20s';
+
+    timer = setInterval(() => {
+      timeLeft -= 1;
+      timerDisplay.textContent = `${timeLeft}s`;
+
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        nextQuestion();
+      }
+    }, 1000);
+  }
+
+  function nextQuestion() {
+    currentIndex += 1;
+    if (currentIndex >= questions.length) {
+      showScreen('finished');
+      return;
+    }
+    renderQuestion();
+    startTimer();
+  }
+
+  function showScreen(screen) {
+    startScreen.classList.add('d-none');
+    runningScreen.classList.add('d-none');
+    finishedScreen.classList.add('d-none');
+
+    if (screen === 'start') {
+      startScreen.classList.remove('d-none');
+    } else if (screen === 'running') {
+      runningScreen.classList.remove('d-none');
+    } else {
+      finishedScreen.classList.remove('d-none');
+    }
+  }
+
+  function buildReviewHtml() {
+    return questions.map((question, index) => {
+      let html = `<div class="border rounded p-3 mb-3"><div class="fw-medium mb-2">${index + 1}. ${question.text}</div>`;
+
+      if (question.type === 'multiple_choice') {
+        html += `
+          <div class="text-muted small">
+            <div>A. ${question.option_a}</div>
+            <div>B. ${question.option_b}</div>
+            <div>C. ${question.option_c}</div>
+            <div>D. ${question.option_d}</div>
+          </div>
+          <div class="mt-2 text-success fw-medium">Correct answer: ${question.correct}</div>`;
+      } else if (question.type === 'true_false') {
+        html += `<div class="text-muted small">True / False</div><div class="mt-2 text-success fw-medium">Correct answer: ${question.correct}</div>`;
+      } else {
+        html += `<div class="text-muted small">Identification</div><div class="mt-2 text-success fw-medium">Correct answer: ${question.correct}</div>`;
+      }
+
+      html += '</div>';
+      return html;
+    }).join('');
+  }
+
+  function showReviewAnswers() {
+    reviewAnswersContainer.innerHTML = buildReviewHtml();
+    reviewAnswersContainer.classList.remove('d-none');
+  }
+
+  function startQuiz() {
+    currentIndex = 0;
+    reviewAnswersContainer.classList.add('d-none');
+    reviewAnswersContainer.innerHTML = '';
+    renderQuestion();
+    showScreen('running');
+    startTimer();
+  }
+
+  startBtn.addEventListener('click', startQuiz);
+  reviewAnswersBtn.addEventListener('click', showReviewAnswers);
+  restartBtn.addEventListener('click', () => {
+    startQuiz();
+  });
+})();
+</script>
+{% endblock %}

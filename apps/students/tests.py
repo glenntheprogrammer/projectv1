@@ -2,9 +2,10 @@ from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
+from apps.attendance.models import Tblattendance
 from apps.courses.models import Tblcourse
 from apps.students.models import Tblstudents
-from apps.students.views import student_save_ajax
+from apps.students.views import student_list_page, student_save_ajax
 
 
 class StudentCourseDuplicationTests(TestCase):
@@ -19,6 +20,30 @@ class StudentCourseDuplicationTests(TestCase):
             Tblstudents.objects.filter(idno='1001', fullname='John Doe').count(),
             2,
         )
+
+
+class StudentAttendanceCountsTests(TestCase):
+    def test_student_list_page_includes_attendance_status_counts(self):
+        self.factory = RequestFactory()
+        self.user = get_user_model().objects.create_user(username='tester', password='secret')
+        course = Tblcourse.objects.create(name='Math', section='A', schoolyr='2025-2026')
+        student = Tblstudents.objects.create(idno='1001', fullname='John Doe', courseid=course.courseid)
+
+        Tblattendance.objects.create(attend_date='2025-08-01', student_id=student, status='1')
+        Tblattendance.objects.create(attend_date='2025-08-02', student_id=student, status='2')
+        Tblattendance.objects.create(attend_date='2025-08-03', student_id=student, status='3')
+        Tblattendance.objects.create(attend_date='2025-08-04', student_id=student, status='4')
+
+        request = self.factory.get('/students/')
+        request.user = self.user
+
+        response = student_list_page(request)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['students'][0]['attendance_counts']['present_count'], 1)
+        self.assertEqual(response.context['students'][0]['attendance_counts']['late_count'], 1)
+        self.assertEqual(response.context['students'][0]['attendance_counts']['absent_count'], 1)
+        self.assertEqual(response.context['students'][0]['attendance_counts']['excused_count'], 1)
 
 
 class StudentSaveAjaxTests(TestCase):
