@@ -30,7 +30,7 @@
             </span>
           </li>
           <li class="nav-item mb-1">
-            <a class="nav-link" href="{% url 'dashboard' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
               <span class="nav-link-icon d-md-none d-lg-inline-block">
                 <i class="fa fa-dashboard"></i>
               </span>
@@ -39,7 +39,7 @@
           </li>
 
            <li class="nav-item mt-n2">
-            <a class="nav-link" href="{% url 'reports:course_reports' %}">
+            <a class="nav-link {% if request.resolver_match.app_name == 'reports' %}active{% endif %}" href="{% url 'reports:course_reports' %}">
               <span class="nav-link-icon d-md-none d-lg-inline-block">
                 <i class="nav-icon fas fa-chart-bar"></i>
               </span>
@@ -72,7 +72,7 @@
             </span>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'courses:course_list' %}">
+            <a class="nav-link {% if request.resolver_match.app_name == 'courses' %}active{% endif %}" href="{% url 'courses:course_list' %}">
               <span class="nav-link-icon d-md-none d-lg-inline-block">
                 <i class="nav-icon fas fa-book"></i>
               </span>
@@ -81,7 +81,7 @@
           </li>
 
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'students:student_list' %}">
+            <a class="nav-link {% if request.resolver_match.app_name == 'students' %}active{% endif %}" href="{% url 'students:student_list' %}">
               <span class="nav-link-icon d-md-none d-lg-inline-block">
                 <i class="nav-icon fas fa-user-graduate"></i>
               </span>

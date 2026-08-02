@@ -88,6 +88,7 @@ def course_save_ajax(request):
     name = request.POST.get('name', '').strip()
     section = request.POST.get('section', '').strip()
     schoolyr = request.POST.get('schoolyr', '').strip()
+    status = request.POST.get('status', 'active').strip().lower()
 
     if not name:
         return JsonResponse({'error': 'Course name is required.'}, status=400)
@@ -95,10 +96,13 @@ def course_save_ajax(request):
         return JsonResponse({'error': 'Section is required.'}, status=400)
     if not schoolyr:
         return JsonResponse({'error': 'School year is required.'}, status=400)
+    if status not in dict(Tblcourse.STATUS_CHOICES):
+        status = 'active'
 
     course.name = name
     course.section = section
     course.schoolyr = schoolyr
+    course.status = status
 
     try:
         course.save()
@@ -111,6 +115,7 @@ def course_save_ajax(request):
         'name': course.name,
         'section': course.section,
         'schoolyr': course.schoolyr,
+        'status': course.status,
     })
 
 

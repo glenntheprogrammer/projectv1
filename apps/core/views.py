@@ -1,3 +1,4 @@
+import json
 from datetime import timedelta
 
 from django.contrib import messages
@@ -164,6 +165,66 @@ def dashboard(request):
         {'label': 'Excused', 'value': excused_count, 'color': '#206bc4'},
     ]
 
+    # --- Per-student mini bar chart (last 14 days) ---
+    today = timezone.localdate()
+    date_range = [today - timedelta(days=i) for i in range(13, -1, -1)]
+    date_labels = [d.strftime('%b %d') for d in date_range]
+
+    students = Tblstudents.objects.all().order_by('fullname')
+
+    attendance_qs = Tblattendance.objects.filter(
+        attend_date__gte=date_range[0],
+        attend_date__lte=today,
+    ).values('student_id', 'attend_date', 'status')
+
+    # Group records by student_id -> {date: status}
+    records_by_student = {}
+    for row in attendance_qs:
+        records_by_student.setdefault(row['student_id'], {})[row['attend_date']] = row['status'].lower()
+
+    student_performance = []
+
+    for student in students:
+        status_by_date = records_by_student.get(student.id, {})
+
+        daily_present = []  # 1/0/None per day, for the sparkline
+        for d in date_range:
+            status = status_by_date.get(d)
+            if status is None:
+                daily_present.append(None)
+            else:
+                daily_present.append(1 if status == 'present' else 0)
+
+        last_7_dates = date_range[-7:]
+        prev_7_dates = date_range[-14:-7]
+
+        def _rate_for(dates):
+            marked = [
+                1 if status_by_date.get(d) == 'present' else 0
+                for d in dates if d in status_by_date
+            ]
+            return (sum(marked) / len(marked)) * 100 if marked else None
+
+        current_rate = _rate_for(last_7_dates)
+        previous_rate = _rate_for(prev_7_dates)
+
+        if current_rate is None:
+            current_rate_display = 0
+        else:
+            current_rate_display = round(current_rate)
+
+        if current_rate is not None and previous_rate is not None:
+            delta = round(current_rate - previous_rate)
+        else:
+            delta = 0
+
+        student_performance.append({
+            'student': student,
+            'attendance_rate': current_rate_display,
+            'delta': delta,
+            'sparkline_json': json.dumps(daily_present),
+        })
+
     context = {
         'total_courses': total_courses,
         'total_students': total_students,
@@ -173,6 +234,8 @@ def dashboard(request):
         'absent_count': absent_count,
         'excused_count': excused_count,
         'attendance_breakdown': attendance_breakdown,
+        'student_performance': student_performance,
+        'chart_labels': json.dumps(date_labels),
     }
     return render(request, 'home.html', context)
 

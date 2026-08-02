@@ -180,13 +180,13 @@
               <input type="text" name="fullname" id="student_fullname" class="form-control" required>
             </div>
             <div class="col-12">
-              <label class="form-label">Course</label>
-              <select name="courseid" id="student_courseid" class="form-select" required>
-                <option value="">Select course</option>
+              <label class="form-label">Courses</label>
+              <select name="courseid" id="student_courseid" class="form-select" multiple size="6" required>
                 {% for course in courses %}
                 <option value="{{ course.courseid }}">{{ course.name }} - {{ course.section }} ({{ course.schoolyr }})</option>
                 {% endfor %}
               </select>
+              <div class="form-text">Hold Ctrl/Cmd to select multiple courses.</div>
             </div>
           </div>
         </div>
@@ -231,9 +231,19 @@
   const deleteName = document.getElementById('deleteStudentName');
   let currentStudentId = null;
 
+  function setCourseSelection(courseIds) {
+    const select = document.getElementById('student_courseid');
+    const selected = courseIds || [];
+
+    Array.from(select.options).forEach(function(option) {
+      option.selected = selected.includes(option.value);
+    });
+  }
+
   function resetForm() {
     form.reset();
     document.getElementById('student_id').value = '';
+    setCourseSelection([]);
     title.textContent = 'Add Student';
     submitBtn.textContent = 'Save Student';
     alertBox.classList.add('d-none');
@@ -257,7 +267,11 @@
       document.getElementById('student_id').value = id;
       document.getElementById('student_idno').value = button.getAttribute('data-idno');
       document.getElementById('student_fullname').value = button.getAttribute('data-fullname');
-      document.getElementById('student_courseid').value = button.getAttribute('data-courseid');
+
+      const courseIds = (button.getAttribute('data-courseid') || '').split(',').map(function(item) {
+        return item.trim();
+      }).filter(Boolean);
+      setCourseSelection(courseIds);
     } else {
       resetForm();
     }
