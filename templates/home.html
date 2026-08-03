@@ -2,18 +2,16 @@
 {% block content %}
 <div class="row row-deck row-cards">
   <div class="page-header d-print-none" aria-label="Page header">
-    <div class="container-xl">
-      <div class="row align-items-center">
-        <div class="col">
-          <div class="page-pretitle">Overview</div>
-          <h2 class="page-title mb-0">Attendance Dashboard</h2>
-        </div>
-        <div class="col-auto">
-          <div class="btn-list">
-            <!-- <a href="" class="btn btn-primary">
-              <i class="fas fa-book me-1"></i> Manage Courses
-            </a> -->
-          </div>
+    <div class="row align-items-center">
+      <div class="col">
+        <div class="page-pretitle">Overview</div>
+        <h2 class="page-title mb-0">Attendance Dashboard</h2>
+      </div>
+      <div class="col-auto">
+        <div class="btn-list">
+          <!-- <a href="" class="btn btn-primary">
+            <i class="fas fa-book me-1"></i> Manage Courses
+          </a> -->
         </div>
       </div>
     </div>
@@ -75,80 +73,85 @@
     </div>
   </div>
 
-  <!-- {% for item in student_performance %}
-  <div class="col-sm-6 col-lg-3">
-    <div class="card card-sm">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3 class="card-title">Attendance Trend</h3>
+          <div class="text-muted text-sm">Daily attendance status for the last 14 days</div>
+        </div>
+      </div>
       <div class="card-body">
-        <div class="row align-items-center">
-          <div class="col">
-            <div class="text-muted text-uppercase small text-truncate" style="max-width: 140px;" title="{{ item.student.fullname }}">
-              {{ item.student.fullname }}
-            </div>
-            <div class="d-flex align-items-baseline gap-2">
-              <div class="h2 mb-0">{{ item.attendance_rate }}%</div>
-              <span class="badge {% if item.delta > 0 %}bg-success-lt{% elif item.delta < 0 %}bg-danger-lt{% else %}bg-secondary-lt{% endif %} d-inline-flex align-items-center">
-                {% if item.delta > 0 %}
-                  <i class="fas fa-arrow-up me-1"></i>{{ item.delta }}%
-                {% elif item.delta < 0 %}
-                  <i class="fas fa-arrow-down me-1"></i>{{ item.delta }}%
-                {% else %}
-                  0% &mdash;
-                {% endif %}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div class="mt-2" style="height: 40px;">
-          <canvas class="student-sparkline" data-present='{{ item.sparkline_json }}'></canvas>
-        </div>
+        <div id="chart-attendance-trend" style="height: 320px;"></div>
       </div>
     </div>
   </div>
-  {% endfor %} -->
+
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3 class="card-title">Students per Course</h3>
+          <div class="text-muted text-sm">Top courses by enrollment</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="chart-courses-donut" style="height: 240px;"></div>
+      </div>
+    </div>
+  </div>
 
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const labels = {{ chart_labels|safe }};
+  const trend = {{ attendance_trend|safe }};
 
-  document.querySelectorAll('.student-sparkline').forEach(function (canvas) {
-    const data = JSON.parse(canvas.dataset.present);
-
-    new Chart(canvas, {
+  new ApexCharts(document.getElementById('chart-attendance-trend'), {
+    chart: {
       type: 'line',
-      data: {
-        labels: labels,
-        datasets: [
-          {
-            data: data,
-            borderColor: '#2fb344',
-            backgroundColor: 'transparent',
-            spanGaps: true,
-            tension: 0.4,
-            borderWidth: 2,
-            pointRadius: 0,
-            pointHoverRadius: 3,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { enabled: false },
-        },
-        scales: {
-          x: { display: false },
-          y: { display: false, min: -0.2, max: 1.2 },
-        },
-      },
-    });
-  });
+      fontFamily: 'inherit',
+      height: 320,
+      toolbar: { show: false },
+      zoom: { enabled: false },
+      animations: { enabled: true },
+    },
+    series: [
+      { name: 'Present', data: trend.present },
+      { name: 'Late', data: trend.late },
+      { name: 'Absent', data: trend.absent },
+      { name: 'Excused', data: trend.excused },
+    ],
+    colors: ['#2fb344', '#f59f00', '#d63939', '#206bc4'],
+    stroke: { width: 2, curve: 'smooth' },
+    dataLabels: { enabled: false },
+    markers: { size: 0, hover: { size: 4 } },
+    grid: { strokeDashArray: 4 },
+    tooltip: { theme: 'dark' },
+    xaxis: { categories: trend.labels, axisBorder: { show: false } },
+    yaxis: { min: 0 },
+    legend: { position: 'top', horizontalAlign: 'right' },
+  }).render();
+
+  const courses = {{ course_distribution|safe }};
+
+  new ApexCharts(document.getElementById('chart-courses-donut'), {
+    chart: {
+      type: 'donut',
+      fontFamily: 'inherit',
+      height: 240,
+      animations: { enabled: true },
+    },
+    series: courses.map(function (item) { return item.value; }),
+    labels: courses.map(function (item) { return item.label; }),
+    colors: courses.map(function (item) { return item.color; }),
+    stroke: { width: 2 },
+    dataLabels: { enabled: false },
+    legend: { position: 'bottom' },
+    tooltip: { theme: 'dark', y: { formatter: function (val) { return val + ' students'; } } },
+  }).render();
 });
 </script>
 {% endblock %}

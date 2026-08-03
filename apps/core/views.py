@@ -152,20 +152,9 @@ def dashboard(request):
 
     attendance_status_counts = Tblattendance.objects.values('status').annotate(count=models.Count('status'))
     status_map = {item['status'].lower(): item['count'] for item in attendance_status_counts}
-
-    present_count = status_map.get('present', 0)
     late_count = status_map.get('late', 0)
-    absent_count = status_map.get('absent', 0)
-    excused_count = status_map.get('excused', 0)
 
-    attendance_breakdown = [
-        {'label': 'Present', 'value': present_count, 'color': '#2fb344'},
-        {'label': 'Late', 'value': late_count, 'color': '#f59f00'},
-        {'label': 'Absent', 'value': absent_count, 'color': '#d63939'},
-        {'label': 'Excused', 'value': excused_count, 'color': '#206bc4'},
-    ]
-
-    # --- Per-student mini bar chart (last 14 days) ---
+    # --- Attendance trend + per-student data (last 14 days) ---
     today = timezone.localdate()
     date_range = [today - timedelta(days=i) for i in range(13, -1, -1)]
     date_labels = [d.strftime('%b %d') for d in date_range]
@@ -177,10 +166,40 @@ def dashboard(request):
         attend_date__lte=today,
     ).values('student_id', 'attend_date', 'status')
 
-    # Group records by student_id -> {date: status}
+    daily_counts = {
+        d: {'present': 0, 'late': 0, 'absent': 0, 'excused': 0}
+        for d in date_range
+    }
+
+    # Group records by student_id -> {date: status} and tally daily totals
     records_by_student = {}
     for row in attendance_qs:
-        records_by_student.setdefault(row['student_id'], {})[row['attend_date']] = row['status'].lower()
+        date = row['attend_date']
+        status = row['status'].lower()
+        records_by_student.setdefault(row['student_id'], {})[date] = status
+        if date in daily_counts and status in daily_counts[date]:
+            daily_counts[date][status] += 1
+
+    attendance_trend = {
+        'labels': date_labels,
+        'present': [daily_counts[d]['present'] for d in date_range],
+        'late': [daily_counts[d]['late'] for d in date_range],
+        'absent': [daily_counts[d]['absent'] for d in date_range],
+        'excused': [daily_counts[d]['excused'] for d in date_range],
+    }
+
+    # --- Students per course (top 8) ---
+    course_palette = ['#206bc4', '#2fb344', '#f59f00', '#d63939', '#922ea4', '#17a2b8', '#6c757d', '#49566c']
+    course_counts = (
+        Tblstudents.objects
+        .values('courseid')
+        .annotate(count=models.Count('courseid'))
+        .order_by('-count')[:8]
+    )
+    course_distribution = [
+        {'label': item['courseid'], 'value': item['count'], 'color': course_palette[i]}
+        for i, item in enumerate(course_counts)
+    ]
 
     student_performance = []
 
@@ -229,11 +248,9 @@ def dashboard(request):
         'total_courses': total_courses,
         'total_students': total_students,
         'total_attendance_records': total_attendance_records,
-        'present_count': present_count,
         'late_count': late_count,
-        'absent_count': absent_count,
-        'excused_count': excused_count,
-        'attendance_breakdown': attendance_breakdown,
+        'attendance_trend': json.dumps(attendance_trend),
+        'course_distribution': json.dumps(course_distribution),
         'student_performance': student_performance,
         'chart_labels': json.dumps(date_labels),
     }
