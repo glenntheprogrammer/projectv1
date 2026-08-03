@@ -10,7 +10,7 @@ from apps.students.models import Tblstudents
 
 @login_required(login_url='login')
 def course_reports_view(request):
-    courses = Tblcourse.objects.all().order_by('name')
+    courses = Tblcourse.objects.filter(status='active').order_by('name')
     report_rows = []
 
     for course in courses:
