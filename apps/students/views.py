@@ -137,31 +137,47 @@ def student_save_ajax(request):
     else:
         student = Tblstudents()
 
+    # Optional
     idno = request.POST.get('idno', '').strip()
     fullname = request.POST.get('fullname', '').strip()
     course_ids = request.POST.getlist('courseid')
     course_ids = [cid.strip() for cid in course_ids if cid.strip()]
 
-    if not idno:
-        return JsonResponse({'error': 'Student ID number is required.'}, status=400)
     if not fullname:
         return JsonResponse({'error': 'Full name is required.'}, status=400)
+
     if not course_ids:
         return JsonResponse({'error': 'At least one course must be selected.'}, status=400)
 
-    existing_course_ids = set(str(cid) for cid in Tblcourse.objects.filter(courseid__in=course_ids).values_list('courseid', flat=True))
-    invalid_course_ids = [cid for cid in course_ids if cid not in existing_course_ids]
-    if invalid_course_ids:
-        return JsonResponse({'error': 'One or more selected courses do not exist.'}, status=400)
+    existing_course_ids = set(
+        str(cid) for cid in Tblcourse.objects.filter(
+            courseid__in=course_ids
+        ).values_list('courseid', flat=True)
+    )
 
+    invalid_course_ids = [
+        cid for cid in course_ids
+        if cid not in existing_course_ids
+    ]
+
+    if invalid_course_ids:
+        return JsonResponse(
+            {'error': 'One or more selected courses do not exist.'},
+            status=400
+        )
+
+    # UPDATE
     if student.pk and len(course_ids) == 1:
         duplicate_qs = Tblstudents.objects.filter(
-            idno=idno,
             fullname=fullname,
             courseid=course_ids[0],
         ).exclude(pk=student.pk)
+
         if duplicate_qs.exists():
-            return JsonResponse({'error': 'A student with the same ID number, name, and course already exists.'}, status=400)
+            return JsonResponse(
+                {'error': 'A student with the same name and course already exists.'},
+                status=400
+            )
 
         student.idno = idno
         student.fullname = fullname
@@ -170,7 +186,10 @@ def student_save_ajax(request):
         try:
             student.save()
         except IntegrityError:
-            return JsonResponse({'error': 'Could not save student due to a conflict.'}, status=400)
+            return JsonResponse(
+                {'error': 'Could not save student due to a conflict.'},
+                status=400
+            )
 
         return JsonResponse({
             'status': 'success',
@@ -181,12 +200,13 @@ def student_save_ajax(request):
         })
 
     created_students = []
+
     for course_id in course_ids:
         duplicate_qs = Tblstudents.objects.filter(
-            idno=idno,
             fullname=fullname,
             courseid=course_id,
         )
+
         if student.pk:
             duplicate_qs = duplicate_qs.exclude(pk=student.pk)
 
@@ -194,14 +214,18 @@ def student_save_ajax(request):
             continue
 
         student_record = Tblstudents(
-            idno=idno,
+            idno=idno,  # Will be '' if left blank
             fullname=fullname,
             courseid=course_id,
         )
+
         try:
             student_record.save()
         except IntegrityError:
-            return JsonResponse({'error': 'Could not save student due to a conflict.'}, status=400)
+            return JsonResponse(
+                {'error': 'Could not save student due to a conflict.'},
+                status=400
+            )
 
         created_students.append(student_record)
 
@@ -209,9 +233,13 @@ def student_save_ajax(request):
         student.delete()
 
     if not created_students:
-        return JsonResponse({'error': 'Student already exists for all selected courses.'}, status=400)
+        return JsonResponse(
+            {'error': 'Student already exists for all selected courses.'},
+            status=400
+        )
 
     first_student = created_students[0]
+
     return JsonResponse({
         'status': 'success',
         'id': first_student.id,
@@ -220,7 +248,6 @@ def student_save_ajax(request):
         'courseid': first_student.courseid,
         'created_count': len(created_students),
     })
-
 
 @login_required(login_url='login')
 @require_POST
