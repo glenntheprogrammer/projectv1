@@ -44,7 +44,7 @@ def student_list_page(request, course_id=None):
             Q(courseid__icontains=query)
         )
 
-    paginator = Paginator(students_list, 10)
+    paginator = Paginator(students_list, 60)
     page_number = request.GET.get('page', 1)
     students = paginator.get_page(page_number)
 

@@ -21,7 +21,7 @@
         <h3 class="card-title mb-1">Timed Quiz</h3>
         <div class="text-muted small">{{ quiz.description|default:"No description provided." }}</div>
       </div>
-      <a href="{% url 'courses:quiz_list' quiz.course.courseid %}" class="btn btn-outline-secondary btn-sm">Back to Quizzes</a>
+      <a href="{% url 'courses:quiz_list' quiz.course.courseid %}" class="btn btn-outline-secondary btn-sm"><i class='far fa-arrow-alt-circle-left me-1'></i> Back</a>
     </div>
     <div class="card-body">
       {% if questions %}
