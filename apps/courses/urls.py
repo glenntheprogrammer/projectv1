@@ -9,6 +9,7 @@ urlpatterns = [
     path('ajax/get/<str:pk>/', views.course_get_ajax, name='course_get_ajax'),
     path('ajax/save/', views.course_save_ajax, name='course_save_ajax'),
     path('ajax/delete/<str:pk>/', views.course_delete_ajax, name='course_delete_ajax'),
+    path('<str:pk>/export-students/', views.course_students_export, name='course_students_export'),
     path('<int:course_id>/quizzes/', views.quiz_list_page, name='quiz_list'),
     path('<int:course_id>/quizzes/save/', views.quiz_save_view, name='quiz_save'),
     path('<int:course_id>/quizzes/delete/<int:quiz_id>/', views.quiz_delete_view, name='quiz_delete'),

@@ -1,13 +1,16 @@
 import json
+import re
 
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.db.models import Q, Count
 from django.template.loader import render_to_string
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
 
 from .models import Tblcourse, Quiz, QuizQuestion
 from apps.students.models import Tblstudents
@@ -120,6 +123,55 @@ def course_save_ajax(request):
         'schoolyr': course.schoolyr,
         'status': course.status,
     })
+
+
+@login_required(login_url='login')
+def course_students_export(request, pk):
+    course = get_object_or_404(Tblcourse, pk=pk)
+    students = Tblstudents.objects.filter(courseid=str(course.courseid)).order_by('fullname')
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Students'
+
+    ws.merge_cells('A1:C1')
+    ws['A1'] = f'{course.name} - {course.section}'
+    ws['A1'].font = Font(bold=True, size=14)
+    ws['A1'].alignment = Alignment(horizontal='center')
+
+    ws.merge_cells('A2:C2')
+    ws['A2'] = f'School Year: {course.schoolyr}'
+    ws['A2'].font = Font(italic=True)
+    ws['A2'].alignment = Alignment(horizontal='center')
+
+    headers = ['#', 'ID Number', 'Student Name']
+    header_fill = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
+    header_font = Font(bold=True, color='FFFFFF')
+    for col, header in enumerate(headers, start=1):
+        cell = ws.cell(row=3, column=col, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center')
+
+    for index, student in enumerate(students, start=1):
+        row = index + 3
+        ws.cell(row=row, column=1, value=index)
+        ws.cell(row=row, column=2, value=student.idno)
+        ws.cell(row=row, column=3, value=student.fullname)
+
+    ws.column_dimensions['A'].width = 8
+    ws.column_dimensions['B'].width = 20
+    ws.column_dimensions['C'].width = 40
+    ws.freeze_panes = 'A4'
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    safe_name = re.sub(r'[^\w\s-]', '', course.name).strip() or 'course'
+    filename = f'{safe_name}_students.xlsx'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response
 
 
 @login_required(login_url='login')

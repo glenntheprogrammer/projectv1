@@ -82,6 +82,9 @@
                 <a href="{% url 'students:student_list_by_course' course.courseid %}" class="btn btn-ghost-secondary btn-icon btn-sm" title="View Students">
                 <i class="fas fa-user-graduate"></i>
                 </a>
+                <a href="{% url 'courses:course_students_export' course.courseid %}" class="btn btn-ghost-success btn-icon btn-sm" title="Export Students to Excel">
+                <i class="fas fa-file-excel"></i>
+                </a>
                 <a href="{% url 'courses:quiz_list' course.courseid %}" class="btn btn-ghost-info btn-icon btn-sm" title="Manage Quizzes">
                 <i class="fas fa-award"></i>
                 </a>
