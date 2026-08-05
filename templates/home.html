@@ -1,4 +1,5 @@
 {% extends "theme/base.html" %}
+{% load static %}
 {% block content %}
 <div class="row row-deck row-cards">
   <div class="page-header d-print-none" aria-label="Page header">
@@ -17,120 +18,59 @@
     </div>
   </div>
 
-  <style>
-    .stat-card {
-      --stat-color: var(--tblr-primary);
-      position: relative;
-      overflow: hidden;
-      border-radius: 1rem;
-      border: 1px solid var(--tblr-border-color);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .stat-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 0.5rem 1.25rem color-mix(in srgb, var(--stat-color) 22%, transparent);
-    }
-    .stat-card .card-body {
-      padding: 1.25rem 1.5rem;
-    }
-    .stat-card .stat-accent {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--stat-color), transparent);
-      opacity: 0.85;
-    }
-    .stat-icon {
-      width: 3rem;
-      height: 3rem;
-      border-radius: 0.85rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      margin-bottom: 1rem;
-      background: color-mix(in srgb, var(--stat-color) 14%, transparent);
-      color: var(--stat-color);
-    }
-    .stat-label {
-      font-size: 0.8125rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--tblr-secondary-color);
-    }
-    .stat-value {
-      font-size: 2rem;
-      font-weight: 800;
-      line-height: 1.1;
-      margin-top: 0.15rem;
-      color: var(--stat-color);
-    }
-    .stat-watermark {
-      position: absolute;
-      right: -0.75rem;
-      bottom: -1.5rem;
-      font-size: 6.5rem;
-      font-weight: 800;
-      line-height: 1;
-      color: var(--stat-color);
-      opacity: 0.06;
-      pointer-events: none;
-      user-select: none;
-    }
-    .stat-primary   { --stat-color: var(--tblr-primary); }
-    .stat-success   { --stat-color: var(--tblr-success); }
-    .stat-info      { --stat-color: var(--tblr-info); }
-    .stat-warning   { --stat-color: var(--tblr-warning); }
-  </style>
-
   <div class="col-sm-6 col-lg-3">
-    <div class="card stat-card stat-primary">
-      <div class="stat-accent"></div>
+    <div class="card card-sm">
       <div class="card-body">
-        <span class="stat-icon"><i class="fas fa-school"></i></span>
-        <div class="stat-label">Total Courses</div>
-        <div class="stat-value">{{ total_courses }}</div>
+        <div class="d-flex align-items-center">
+          <span class="avatar bg-primary-subtle text-primary me-3"><i class="fas fa-school"></i></span>
+          <div>
+            <div class="text-muted">Total Courses</div>
+            <div class="h2 mb-0">{{ total_courses }}</div>
+          </div>
+        </div>
       </div>
-      <span class="stat-watermark"><i class="fas fa-school"></i></span>
     </div>
   </div>
 
   <div class="col-sm-6 col-lg-3">
-    <div class="card stat-card stat-success">
-      <div class="stat-accent"></div>
+    <div class="card card-sm">
       <div class="card-body">
-        <span class="stat-icon"><i class="fas fa-users"></i></span>
-        <div class="stat-label">Total Students</div>
-        <div class="stat-value">{{ total_students }}</div>
+        <div class="d-flex align-items-center">
+          <span class="avatar bg-success-subtle text-success me-3"><i class="fas fa-users"></i></span>
+          <div>
+            <div class="text-muted">Total Students</div>
+            <div class="h2 mb-0">{{ total_students }}</div>
+          </div>
+        </div>
       </div>
-      <span class="stat-watermark"><i class="fas fa-users"></i></span>
     </div>
   </div>
 
   <div class="col-sm-6 col-lg-3">
-    <div class="card stat-card stat-info">
-      <div class="stat-accent"></div>
+    <div class="card card-sm">
       <div class="card-body">
-        <span class="stat-icon"><i class="fas fa-clipboard-check"></i></span>
-        <div class="stat-label">Attendance Records</div>
-        <div class="stat-value">{{ total_attendance_records }}</div>
+        <div class="d-flex align-items-center">
+          <span class="avatar bg-info-subtle text-info me-3"><i class="fas fa-clipboard-check"></i></span>
+          <div>
+            <div class="text-muted">Attendance Records</div>
+            <div class="h2 mb-0">{{ total_attendance_records }}</div>
+          </div>
+        </div>
       </div>
-      <span class="stat-watermark"><i class="fas fa-clipboard-check"></i></span>
     </div>
   </div>
 
   <div class="col-sm-6 col-lg-3">
-    <div class="card stat-card stat-warning">
-      <div class="stat-accent"></div>
+    <div class="card card-sm">
       <div class="card-body">
-        <span class="stat-icon"><i class="fas fa-clock"></i></span>
-        <div class="stat-label">Late Entries</div>
-        <div class="stat-value">{{ late_count }}</div>
+        <div class="d-flex align-items-center">
+          <span class="avatar bg-warning-subtle text-warning me-3"><i class="fas fa-clock"></i></span>
+          <div>
+            <div class="text-muted">Late Entries</div>
+            <div class="h2 mb-0">{{ late_count }}</div>
+          </div>
+        </div>
       </div>
-      <span class="stat-watermark"><i class="fas fa-clock"></i></span>
     </div>
   </div>
 
@@ -162,10 +102,30 @@
     </div>
   </div>
 
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3 class="card-title">Class Schedules</h3>
+          <div class="text-muted text-sm">Weekly schedule per course</div>
+        </div>
+        <div class="card-actions">
+          <a href="{% url 'courses:schedule_list' %}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-cog me-1"></i> Manage Schedules
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="calendar-schedule"></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'libs/fullcalendar/index.global.min.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const trend = {{ attendance_trend|safe }};
@@ -213,6 +173,31 @@ document.addEventListener('DOMContentLoaded', function () {
     legend: { position: 'bottom' },
     tooltip: { theme: 'dark', y: { formatter: function (val) { return val + ' students'; } } },
   }).render();
+
+  const calendarEl = document.getElementById('calendar-schedule');
+  if (calendarEl && window.FullCalendar) {
+    new FullCalendar.Calendar(calendarEl, {
+      initialView: 'timeGridWeek',
+      slotMinTime: '07:00:00',
+      slotMaxTime: '20:00:00',
+      nowIndicator: true,
+      height: 'auto',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay',
+      },
+      events: '{% url "courses:schedule_events_ajax" %}',
+      eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: 'short' },
+      eventDidMount: function (info) {
+        const room = info.event.extendedProps.room;
+        if (room) {
+          info.el.querySelector('.fc-event-title') &&
+            (info.el.querySelector('.fc-event-title').textContent += '  (' + room + ')');
+        }
+      },
+    }).render();
+  }
 });
 </script>
 {% endblock %}

@@ -1,0 +1,263 @@
+{% extends "theme/base.html" %}
+{% block content %}
+<div class="container-xl">
+  <div class="page-header d-print-none" aria-label="Page header">
+    <div class="row align-items-center">
+      <div class="col">
+        <div class="page-pretitle">Overview</div>
+        <h2 class="page-title mb-0">Schedule Management</h2>
+      </div>
+    </div>
+  </div>
+  <br>
+
+  <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-3">
+    <form method="GET" class="w-100" style="max-width: 420px;">
+      <div class="input-group">
+        <span class="input-group-text"><i class="ti ti-filter"></i></span>
+        <select name="course" id="courseFilter" class="form-select" onchange="this.form.submit()">
+          <option value="">All Courses</option>
+          {% for course in courses %}
+          <option value="{{ course.courseid }}" {% if course.courseid|stringformat:"s" == selected_course_id %}selected{% endif %}>
+            {{ course.name }} - {{ course.section }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scheduleModal" data-mode="create" {% if selected_course_id %}data-preset-course="{{ selected_course_id }}"{% endif %}>
+      <i class="fas fa-plus-circle me-2"></i> Add Schedule
+    </button>
+  </div>
+
+  <div id="scheduleAlert" class="alert alert-danger d-none" role="alert"></div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        All Schedules
+        {% if selected_course_id %}
+        <span class="text-muted fw-normal">— filtered by selected course</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Course</th>
+            <th>Year &amp; Section</th>
+            <th>Day</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Room</th>
+            <th class="w-1">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for schedule in schedules %}
+        <tr data-row-id="{{ schedule.id }}">
+            <td class="text-muted">{{ forloop.counter }}</td>
+            <td class="fw-medium">{{ schedule.course.name }}</td>
+            <td class="text-muted">{{ schedule.course.section }}</td>
+            <td>{{ schedule.get_day_display }}</td>
+            <td class="text-muted">{{ schedule.start_time|date:"H:i" }}</td>
+            <td class="text-muted">{{ schedule.end_time|date:"H:i" }}</td>
+            <td class="text-muted">{{ schedule.room|default:"—" }}</td>
+            <td>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-ghost-primary btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#scheduleModal" data-mode="edit" data-id="{{ schedule.id }}" data-course="{{ schedule.course_id }}" data-day="{{ schedule.day }}" data-start="{{ schedule.start_time|date:'H:i' }}" data-end="{{ schedule.end_time|date:'H:i' }}" data-room="{{ schedule.room }}" title="Edit">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button type="button" class="btn btn-ghost-danger btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#deleteScheduleModal" data-id="{{ schedule.id }}" data-title="{{ schedule.course.name }} - {{ schedule.get_day_display }} {{ schedule.start_time|date:'H:i' }}" title="Delete">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="8" class="text-center text-muted py-4">No schedules found.</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="scheduleModal" tabindex="-1">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="scheduleModalTitle">Add Schedule</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="scheduleForm">
+        {% csrf_token %}
+        <input type="hidden" name="id" id="schedule_id">
+        <div class="modal-body">
+          <div id="scheduleFormError" class="alert alert-danger d-none"></div>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Course</label>
+              <select name="course" id="schedule_course" class="form-select" required>
+                <option value="">Select a course...</option>
+                {% for course in courses %}
+                <option value="{{ course.courseid }}">{{ course.name }} - {{ course.section }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Day</label>
+              <select name="day" id="schedule_day" class="form-select" required>
+                <option value="">Select a day...</option>
+                {% for value, label in schedule_day_choices %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Start Time</label>
+              <input type="time" name="start_time" id="schedule_start" class="form-control" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label">End Time</label>
+              <input type="time" name="end_time" id="schedule_end" class="form-control" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Room</label>
+              <input type="text" name="room" id="schedule_room" class="form-control" placeholder="e.g. Room 201">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="scheduleSubmitBtn">Save Schedule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="deleteScheduleModal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Schedule</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong id="deleteScheduleTitle"></strong>?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteScheduleBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const modalEl = document.getElementById('scheduleModal');
+  const deleteModalEl = document.getElementById('deleteScheduleModal');
+  const form = document.getElementById('scheduleForm');
+  const alertBox = document.getElementById('scheduleAlert');
+  const formErrorBox = document.getElementById('scheduleFormError');
+  const title = document.getElementById('scheduleModalTitle');
+  const submitBtn = document.getElementById('scheduleSubmitBtn');
+  const deleteBtn = document.getElementById('confirmDeleteScheduleBtn');
+  const deleteTitle = document.getElementById('deleteScheduleTitle');
+  const presetCourse = {{ selected_course_id|default:'""' }};
+  let currentScheduleId = null;
+
+  function resetForm() {
+    form.reset();
+    document.getElementById('schedule_id').value = '';
+    title.textContent = 'Add Schedule';
+    submitBtn.textContent = 'Save Schedule';
+    formErrorBox.classList.add('d-none');
+    formErrorBox.textContent = '';
+    currentScheduleId = null;
+  }
+
+  modalEl.addEventListener('show.bs.modal', function(event) {
+    const button = event.relatedTarget;
+    if (!button) {
+      resetForm();
+      return;
+    }
+
+    const mode = button.getAttribute('data-mode');
+    if (mode === 'edit') {
+      title.textContent = 'Edit Schedule';
+      submitBtn.textContent = 'Update Schedule';
+      currentScheduleId = button.getAttribute('data-id');
+      document.getElementById('schedule_id').value = currentScheduleId;
+      document.getElementById('schedule_course').value = button.getAttribute('data-course');
+      document.getElementById('schedule_day').value = button.getAttribute('data-day');
+      document.getElementById('schedule_start').value = button.getAttribute('data-start');
+      document.getElementById('schedule_end').value = button.getAttribute('data-end');
+      document.getElementById('schedule_room').value = button.getAttribute('data-room') || '';
+    } else {
+      resetForm();
+      const preset = button.getAttribute('data-preset-course') || presetCourse;
+      if (preset) {
+        document.getElementById('schedule_course').value = preset;
+      }
+    }
+  });
+
+  deleteModalEl.addEventListener('show.bs.modal', function(event) {
+    const button = event.relatedTarget;
+    if (button) {
+      currentScheduleId = button.getAttribute('data-id');
+      deleteTitle.textContent = button.getAttribute('data-title');
+    }
+  });
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(form);
+
+    fetch('{% url "courses:schedule_save_ajax" %}', {
+      method: 'POST',
+      headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value},
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        formErrorBox.textContent = data.error;
+        formErrorBox.classList.remove('d-none');
+        return;
+      }
+      window.location.reload();
+    })
+    .catch(() => {
+      formErrorBox.textContent = 'Something went wrong.';
+      formErrorBox.classList.remove('d-none');
+    });
+  });
+
+  deleteBtn.addEventListener('click', function() {
+    if (!currentScheduleId) return;
+    fetch('/courses/schedules/ajax/delete/' + currentScheduleId + '/', {
+      method: 'POST',
+      headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value}
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'deleted') {
+        window.location.reload();
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

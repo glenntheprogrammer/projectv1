@@ -82,6 +82,9 @@
                 <a href="{% url 'students:student_list_by_course' course.courseid %}" class="btn btn-ghost-secondary btn-icon btn-sm" title="View Students">
                 <i class="fas fa-user-graduate"></i>
                 </a>
+                <a href="{% url 'courses:schedule_list' %}?course={{ course.courseid }}" class="btn btn-ghost-warning btn-icon btn-sm" title="Manage Schedule">
+                <i class="fas fa-calendar-alt"></i>
+                </a>
                 <a href="{% url 'courses:course_students_export' course.courseid %}" class="btn btn-ghost-success btn-icon btn-sm" title="Export Students to Excel">
                 <i class="fas fa-file-excel"></i>
                 </a>

@@ -1,5 +1,6 @@
 import json
 import re
+from datetime import datetime
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponse
@@ -12,7 +13,7 @@ from django.template.loader import render_to_string
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
-from .models import Tblcourse, Quiz, QuizQuestion
+from .models import Tblcourse, CourseSchedule, Quiz, QuizQuestion
 from apps.students.models import Tblstudents
 
 @login_required(login_url='login')
@@ -180,6 +181,136 @@ def course_delete_ajax(request, pk):
     course = get_object_or_404(Tblcourse, pk=pk)
     course.delete()
     return JsonResponse({'status': 'deleted'})
+
+
+@login_required(login_url='login')
+def schedule_page(request):
+    courses = Tblcourse.objects.all().order_by('name')
+    selected_course_id = request.GET.get('course', '').strip()
+    schedules_qs = CourseSchedule.objects.select_related('course').all()
+    if selected_course_id:
+        schedules_qs = schedules_qs.filter(course_id=selected_course_id)
+    schedules = schedules_qs.order_by('course__name', 'day', 'start_time')
+
+    return render(request, 'courses/schedules.html', {
+        'courses': courses,
+        'schedules': schedules,
+        'selected_course_id': selected_course_id,
+        'schedule_day_choices': CourseSchedule.DAY_CHOICES,
+    })
+
+
+@login_required(login_url='login')
+def schedule_get_ajax(request, pk):
+    schedule = get_object_or_404(CourseSchedule, pk=pk)
+    return JsonResponse({
+        'id': schedule.id,
+        'course': schedule.course_id,
+        'day': schedule.day,
+        'start_time': schedule.start_time.strftime('%H:%M'),
+        'end_time': schedule.end_time.strftime('%H:%M'),
+        'room': schedule.room,
+    })
+
+
+def _parse_time(value, label):
+    try:
+        return datetime.strptime(value, '%H:%M').time()
+    except (TypeError, ValueError):
+        return None
+
+
+@login_required(login_url='login')
+@require_POST
+def schedule_save_ajax(request):
+    schedule_id = request.POST.get('id', '').strip()
+    course_id = request.POST.get('course', '').strip()
+    day_raw = request.POST.get('day', '').strip()
+    start_raw = request.POST.get('start_time', '').strip()
+    end_raw = request.POST.get('end_time', '').strip()
+    room = request.POST.get('room', '').strip()
+
+    if not course_id:
+        return JsonResponse({'error': 'Course is required.'}, status=400)
+    course = get_object_or_404(Tblcourse, pk=course_id)
+
+    try:
+        day = int(day_raw)
+    except (TypeError, ValueError):
+        return JsonResponse({'error': 'Day is required.'}, status=400)
+    if day not in dict(CourseSchedule.DAY_CHOICES):
+        return JsonResponse({'error': 'Invalid day.'}, status=400)
+
+    start_time = _parse_time(start_raw, 'Start time')
+    end_time = _parse_time(end_raw, 'End time')
+    if start_time is None:
+        return JsonResponse({'error': 'Start time is required.'}, status=400)
+    if end_time is None:
+        return JsonResponse({'error': 'End time is required.'}, status=400)
+    if end_time <= start_time:
+        return JsonResponse({'error': 'End time must be after the start time.'}, status=400)
+
+    if schedule_id:
+        schedule = get_object_or_404(CourseSchedule, pk=schedule_id)
+    else:
+        schedule = CourseSchedule()
+
+    schedule.course = course
+    schedule.day = day
+    schedule.start_time = start_time
+    schedule.end_time = end_time
+    schedule.room = room
+
+    try:
+        schedule.save()
+    except IntegrityError:
+        return JsonResponse({'error': 'Could not save schedule due to a conflict.'}, status=400)
+
+    return JsonResponse({
+        'status': 'success',
+        'id': schedule.id,
+        'course': schedule.course_id,
+        'course_name': schedule.course.name,
+        'section': schedule.course.section,
+        'day': schedule.day,
+        'day_label': schedule.get_day_display(),
+        'start_time': schedule.start_time.strftime('%H:%M'),
+        'end_time': schedule.end_time.strftime('%H:%M'),
+        'room': schedule.room,
+    })
+
+
+@login_required(login_url='login')
+@require_POST
+def schedule_delete_ajax(request, pk):
+    schedule = get_object_or_404(CourseSchedule, pk=pk)
+    schedule.delete()
+    return JsonResponse({'status': 'deleted'})
+
+
+@login_required(login_url='login')
+def schedule_events_ajax(request):
+    schedules = CourseSchedule.objects.select_related('course').filter(course__status='active')
+
+    events = []
+    for schedule in schedules:
+        events.append({
+            'id': schedule.id,
+            'title': f"{schedule.course.name} - {schedule.course.section}",
+            'daysOfWeek': [schedule.day % 7],
+            'startTime': schedule.start_time.strftime('%H:%M:%S'),
+            'endTime': schedule.end_time.strftime('%H:%M:%S'),
+            'backgroundColor': '#d8f3dc',
+            'borderColor': '#a3d9b1',
+            'textColor': '#1b4332',
+            'extendedProps': {
+                'room': schedule.room,
+                'course': schedule.course.name,
+                'section': schedule.course.section,
+            },
+        })
+
+    return JsonResponse(events, safe=False)
 
 
 @login_required(login_url='login')

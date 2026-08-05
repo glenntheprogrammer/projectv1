@@ -6,8 +6,82 @@ from io import BytesIO
 
 from openpyxl import load_workbook
 
-from .models import Tblcourse, Quiz, QuizQuestion
+from .models import Tblcourse, CourseSchedule, Quiz, QuizQuestion
 from apps.students.models import Tblstudents
+
+
+class CourseScheduleTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username='tester', password='secret123')
+        self.course = Tblcourse.objects.create(name='BSIT', section='1A', schoolyr='2024-2025')
+
+    def test_schedule_save_creates_schedule(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse('courses:schedule_save_ajax'),
+            {
+                'course': self.course.courseid,
+                'day': '1',
+                'start_time': '08:00',
+                'end_time': '09:30',
+                'room': 'Room 201',
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['status'], 'success')
+        schedule = CourseSchedule.objects.latest('id')
+        self.assertEqual(schedule.course, self.course)
+        self.assertEqual(schedule.day, 1)
+        self.assertEqual(schedule.room, 'Room 201')
+
+    def test_schedule_save_requires_course_and_valid_times(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse('courses:schedule_save_ajax'),
+            {'course': '', 'day': '1', 'start_time': '08:00', 'end_time': '09:30'},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('Course', response.json()['error'])
+
+        response = self.client.post(
+            reverse('courses:schedule_save_ajax'),
+            {
+                'course': self.course.courseid,
+                'day': '1',
+                'start_time': '10:00',
+                'end_time': '09:30',
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('End time', response.json()['error'])
+
+    def test_schedule_events_ajax_maps_days_and_formats_times(self):
+        self.client.force_login(self.user)
+        schedule = CourseSchedule.objects.create(
+            course=self.course, day=1, start_time='08:00', end_time='09:30', room='201'
+        )
+        response = self.client.get(reverse('courses:schedule_events_ajax'))
+        self.assertEqual(response.status_code, 200)
+        events = response.json()
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]['id'], schedule.id)
+        self.assertEqual(events[0]['daysOfWeek'], [1])
+        self.assertEqual(events[0]['startTime'], '08:00:00')
+        self.assertEqual(events[0]['endTime'], '09:30:00')
+        self.assertEqual(events[0]['extendedProps']['room'], '201')
+
+    def test_schedule_delete_removes_schedule(self):
+        self.client.force_login(self.user)
+        schedule = CourseSchedule.objects.create(
+            course=self.course, day=2, start_time='10:00', end_time='11:00'
+        )
+        response = self.client.post(reverse('courses:schedule_delete_ajax', args=[schedule.id]))
+        self.assertEqual(response.json()['status'], 'deleted')
+        self.assertFalse(CourseSchedule.objects.filter(pk=schedule.id).exists())
+
+    def test_schedule_endpoints_require_login(self):
+        response = self.client.get(reverse('courses:schedule_events_ajax'))
+        self.assertEqual(response.status_code, 302)
 
 
 class QuizQuestionSaveTests(TestCase):
