@@ -4,7 +4,7 @@
   <a href="." class="d-flex align-items-center gap-2 text-decoration-none">
     <i class='far fa-calendar'></i>
     <span class="fw-bold fs-3 text-body dh-navbar-text">
-      SMART <span class="text-primary">Attendance</span>
+      The <span class="text-primary">KNIGHTS</span>
     </span>
   </a>
 </div>
@@ -62,6 +62,15 @@
           </li>
 
           <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.app_name == 'students' %}active{% endif %}" href="{% url 'students:student_list' %}">
+              <span class="nav-link-icon d-md-none d-lg-inline-block">
+                <i class="nav-icon fas fa-user-graduate"></i>
+              </span>
+              <span class="nav-link-title">Students</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'schedule_list' %}active{% endif %}" href="{% url 'courses:schedule_list' %}">
               <span class="nav-link-icon d-md-none d-lg-inline-block">
                 <i class="nav-icon fas fa-calendar-alt"></i>
@@ -70,14 +79,6 @@
             </a>
           </li>
 
-          <li class="nav-item">
-            <a class="nav-link {% if request.resolver_match.app_name == 'students' %}active{% endif %}" href="{% url 'students:student_list' %}">
-              <span class="nav-link-icon d-md-none d-lg-inline-block">
-                <i class="nav-icon fas fa-user-graduate"></i>
-              </span>
-              <span class="nav-link-title">Students</span>
-            </a>
-          </li>
            <li class="nav-item">
             <span class="nav-link-title text-secondary small px-3 mb-1">
               Settings

@@ -6,6 +6,8 @@ from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.db.models import Q, Count
 
+from datetime import date
+
 from apps.attendance.models import Tblattendance
 from apps.courses.models import Tblcourse
 from .models import Tblstudents
@@ -57,6 +59,10 @@ def student_list_page(request, course_id=None):
             selected_course_name = selected_course.name
 
     student_rows = []
+    today_records = dict(
+        Tblattendance.objects.filter(attend_date=date.today()).values_list('student_id', 'status')
+    )
+
     for student in students:
         attendance_counts = Tblattendance.objects.filter(student_id=student).values('status').annotate(count=Count('status'))
         attendance_map = {item['status']: item['count'] for item in attendance_counts}
@@ -67,6 +73,7 @@ def student_list_page(request, course_id=None):
             'fullname': student.fullname,
             'courseid': student.courseid,
             'course_display': _get_course_display(student.courseid),
+            'today_status': today_records.get(student.id, ''),
             'attendance_counts': {
                 'present_count': attendance_map.get('1', 0),
                 'late_count': attendance_map.get('2', 0),

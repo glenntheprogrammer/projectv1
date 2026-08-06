@@ -2,6 +2,7 @@ from calendar import Calendar
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_POST
@@ -34,13 +35,17 @@ def attendance_save_ajax(request):
 
     student = get_object_or_404(Tblstudents, pk=student_id)
 
-    attendance, created = Tblattendance.objects.get_or_create(
-        attend_date=date.today(),
-        student_id=student,
-        defaults={'status': status},
-    )
-
-    if not created:
+    try:
+        attendance, created = Tblattendance.objects.update_or_create(
+            attend_date=date.today(),
+            student_id=student,
+            defaults={'status': status},
+        )
+    except IntegrityError:
+        attendance = Tblattendance.objects.filter(
+            attend_date=date.today(),
+            student_id=student,
+        ).first()
         attendance.status = status
         attendance.save(update_fields=['status'])
 

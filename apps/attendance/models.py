@@ -12,6 +12,12 @@ class Tblattendance(models.Model):
 
     class Meta:
         db_table = 'tblattendance'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['student_id', 'attend_date'],
+                name='unique_student_attendance_per_day',
+            ),
+        ]
 
     def __str__(self):
         return f"{self.student_id} - {self.status}"

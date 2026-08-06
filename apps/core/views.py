@@ -18,6 +18,17 @@ from apps.students.models import Tblstudents
 
 User = get_user_model()
 
+STATUS_NAME_MAP = {
+    '1': 'present',
+    '2': 'late',
+    '3': 'absent',
+    '4': 'excused',
+    'present': 'present',
+    'late': 'late',
+    'absent': 'absent',
+    'excused': 'excused',
+}
+
 MAX_FAILED_ATTEMPTS = 5
 LOCK_DURATION = timedelta(minutes=1)
 INVALID_LOGIN_MESSAGE = 'Invalid username or password.'
@@ -151,7 +162,8 @@ def dashboard(request):
     total_attendance_records = Tblattendance.objects.count()
 
     attendance_status_counts = Tblattendance.objects.values('status').annotate(count=models.Count('status'))
-    status_map = {item['status'].lower(): item['count'] for item in attendance_status_counts}
+    status_map = {STATUS_NAME_MAP.get(item['status'].lower(), item['status'].lower()): item['count'] for item in attendance_status_counts}
+    present_count = status_map.get('present', 0)
     late_count = status_map.get('late', 0)
 
     # --- Attendance trend + per-student data (last 14 days) ---
@@ -175,7 +187,7 @@ def dashboard(request):
     records_by_student = {}
     for row in attendance_qs:
         date = row['attend_date']
-        status = row['status'].lower()
+        status = STATUS_NAME_MAP.get(row['status'].lower(), row['status'].lower())
         records_by_student.setdefault(row['student_id'], {})[date] = status
         if date in daily_counts and status in daily_counts[date]:
             daily_counts[date][status] += 1
@@ -248,6 +260,7 @@ def dashboard(request):
         'total_courses': total_courses,
         'total_students': total_students,
         'total_attendance_records': total_attendance_records,
+        'present_count': present_count,
         'late_count': late_count,
         'attendance_trend': json.dumps(attendance_trend),
         'course_distribution': json.dumps(course_distribution),

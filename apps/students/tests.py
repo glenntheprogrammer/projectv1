@@ -24,7 +24,6 @@ class StudentCourseDuplicationTests(TestCase):
 
 class StudentAttendanceCountsTests(TestCase):
     def test_student_list_page_includes_attendance_status_counts(self):
-        self.factory = RequestFactory()
         self.user = get_user_model().objects.create_user(username='tester', password='secret')
         course = Tblcourse.objects.create(name='Math', section='A', schoolyr='2025-2026')
         student = Tblstudents.objects.create(idno='1001', fullname='John Doe', courseid=course.courseid)
@@ -34,10 +33,8 @@ class StudentAttendanceCountsTests(TestCase):
         Tblattendance.objects.create(attend_date='2025-08-03', student_id=student, status='3')
         Tblattendance.objects.create(attend_date='2025-08-04', student_id=student, status='4')
 
-        request = self.factory.get('/students/')
-        request.user = self.user
-
-        response = student_list_page(request)
+        self.client.force_login(self.user)
+        response = self.client.get('/students/')
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['students'][0]['attendance_counts']['present_count'], 1)

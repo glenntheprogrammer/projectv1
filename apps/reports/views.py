@@ -48,9 +48,9 @@ def course_reports_view(request):
                     'excused_count': excused_count,
                 })
 
-        course_report['most_late'] = sorted(course_report['most_late'], key=lambda item: item['late_count'], reverse=True)[:5]
-        course_report['most_absent'] = sorted(course_report['most_absent'], key=lambda item: item['absent_count'], reverse=True)[:5]
-        course_report['perfect_attendance'] = sorted(course_report['perfect_attendance'], key=lambda item: item['present_count'], reverse=True)[:5]
+        course_report['most_late'] = sorted(course_report['most_late'], key=lambda item: item['late_count'], reverse=True)
+        course_report['most_absent'] = sorted(course_report['most_absent'], key=lambda item: item['absent_count'], reverse=True)
+        course_report['perfect_attendance'] = sorted(course_report['perfect_attendance'], key=lambda item: item['present_count'], reverse=True)
         report_rows.append(course_report)
 
     return render(request, 'reports/course_reports.html', {
