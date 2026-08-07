@@ -1,6 +1,37 @@
 {% extends "theme/base.html" %}
 {% load static %}
 {% block content %}
+<style>
+.stat-card { overflow: hidden; position: relative; }
+.stat-card::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: -2.5rem;
+  inset-block-start: -2.5rem;
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+.stat-card .stat-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+.stat-card .tracking-wide { letter-spacing: 0.06em; }
+.stat-card-primary { background: linear-gradient(135deg, #066fd1, #4299e1); }
+.stat-card-success { background: linear-gradient(135deg, #2fb344, #40c74b); }
+.stat-card-info { background: linear-gradient(135deg, #17a2b8, #4299e1); }
+.stat-card-warning { background: linear-gradient(135deg, #f59f00, #f76707); }
+</style>
 <div class="row row-deck row-cards">
   <div class="page-header d-print-none" aria-label="Page header">
     <div class="row align-items-center">
@@ -19,13 +50,15 @@
   </div>
 
   <div class="col-sm-6 col-lg-3">
-    <div class="card card-sm">
+    <div class="card card-sm border-0 shadow-sm stat-card stat-card-primary">
       <div class="card-body">
-        <div class="d-flex align-items-center">
-          <span class="avatar bg-primary-subtle text-primary me-3"><i class="fas fa-school"></i></span>
-          <div>
-            <div class="text-muted">Total Courses</div>
-            <div class="h2 mb-0">{{ total_courses }}</div>
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="text-white">
+            <div class="text-white-50 fw-medium text-uppercase small tracking-wide">Total Courses</div>
+            <div class="h2 mb-0 fw-bold">{{ total_courses }}</div>
+          </div>
+          <div class="stat-card-icon">
+            <i class="fas fa-school"></i>
           </div>
         </div>
       </div>
@@ -33,13 +66,15 @@
   </div>
 
   <div class="col-sm-6 col-lg-3">
-    <div class="card card-sm">
+    <div class="card card-sm border-0 shadow-sm stat-card stat-card-success">
       <div class="card-body">
-        <div class="d-flex align-items-center">
-          <span class="avatar bg-success-subtle text-success me-3"><i class="fas fa-users"></i></span>
-          <div>
-            <div class="text-muted">Total Students</div>
-            <div class="h2 mb-0">{{ total_students }}</div>
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="text-white">
+            <div class="text-white-50 fw-medium text-uppercase small tracking-wide">Total Students</div>
+            <div class="h2 mb-0 fw-bold">{{ total_students }}</div>
+          </div>
+          <div class="stat-card-icon">
+            <i class="fas fa-users"></i>
           </div>
         </div>
       </div>
@@ -47,13 +82,15 @@
   </div>
 
   <div class="col-sm-6 col-lg-3">
-    <div class="card card-sm">
+    <div class="card card-sm border-0 shadow-sm stat-card stat-card-info">
       <div class="card-body">
-        <div class="d-flex align-items-center">
-          <span class="avatar bg-info-subtle text-info me-3"><i class="fas fa-clipboard-check"></i></span>
-          <div>
-            <div class="text-muted">Attendance Records</div>
-            <div class="h2 mb-0">{{ total_attendance_records }}</div>
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="text-white">
+            <div class="text-white-50 fw-medium text-uppercase small tracking-wide">Attendance Records</div>
+            <div class="h2 mb-0 fw-bold">{{ total_attendance_records }}</div>
+          </div>
+          <div class="stat-card-icon">
+            <i class="fas fa-clipboard-check"></i>
           </div>
         </div>
       </div>
@@ -61,13 +98,15 @@
   </div>
 
   <div class="col-sm-6 col-lg-3">
-    <div class="card card-sm">
+    <div class="card card-sm border-0 shadow-sm stat-card stat-card-warning">
       <div class="card-body">
-        <div class="d-flex align-items-center">
-          <span class="avatar bg-warning-subtle text-warning me-3"><i class="fas fa-clock"></i></span>
-          <div>
-            <div class="text-muted">Late Entries</div>
-            <div class="h2 mb-0">{{ late_count }}</div>
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="text-white">
+            <div class="text-white-50 fw-medium text-uppercase small tracking-wide">Late Entries</div>
+            <div class="h2 mb-0 fw-bold">{{ late_count }}</div>
+          </div>
+          <div class="stat-card-icon">
+            <i class="fas fa-clock"></i>
           </div>
         </div>
       </div>

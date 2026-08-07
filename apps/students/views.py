@@ -72,6 +72,8 @@ def student_list_page(request, course_id=None):
             'idno': student.idno,
             'fullname': student.fullname,
             'courseid': student.courseid,
+            'enrollment_type': student.enrollment_type,
+            'enrollment_type_display': student.get_enrollment_type_display(),
             'course_display': _get_course_display(student.courseid),
             'today_status': today_records.get(student.id, ''),
             'attendance_counts': {
@@ -112,7 +114,7 @@ def student_list_ajax(request):
     paginator = Paginator(students_list, 50)
     page_number = request.GET.get('page', 1)
     students = paginator.get_page(page_number)
-    data = list(students.object_list.values('id', 'idno', 'fullname', 'courseid'))
+    data = list(students.object_list.values('id', 'idno', 'fullname', 'courseid', 'enrollment_type'))
     return JsonResponse({
         'data': data,
         'has_next': students.has_next(),
@@ -131,6 +133,7 @@ def student_get_ajax(request, pk):
         'idno': student.idno,
         'fullname': student.fullname,
         'courseid': student.courseid,
+        'enrollment_type': student.enrollment_type,
     })
 
 
@@ -147,6 +150,7 @@ def student_save_ajax(request):
     # Optional
     idno = request.POST.get('idno', '').strip()
     fullname = request.POST.get('fullname', '').strip()
+    enrollment_type = request.POST.get('enrollment_type', '').strip()
     course_ids = request.POST.getlist('courseid')
     course_ids = [cid.strip() for cid in course_ids if cid.strip()]
 
@@ -155,6 +159,12 @@ def student_save_ajax(request):
 
     if not course_ids:
         return JsonResponse({'error': 'At least one course must be selected.'}, status=400)
+
+    if not enrollment_type:
+        enrollment_type = Tblstudents.REGULAR
+
+    if enrollment_type not in dict(Tblstudents.ENROLLMENT_TYPES):
+        return JsonResponse({'error': 'Invalid enrollment type.'}, status=400)
 
     existing_course_ids = set(
         str(cid) for cid in Tblcourse.objects.filter(
@@ -189,6 +199,7 @@ def student_save_ajax(request):
         student.idno = idno
         student.fullname = fullname
         student.courseid = course_ids[0]
+        student.enrollment_type = enrollment_type
 
         try:
             student.save()
@@ -204,6 +215,7 @@ def student_save_ajax(request):
             'idno': student.idno,
             'fullname': student.fullname,
             'courseid': student.courseid,
+            'enrollment_type': student.enrollment_type,
         })
 
     created_students = []
@@ -224,6 +236,7 @@ def student_save_ajax(request):
             idno=idno,  # Will be '' if left blank
             fullname=fullname,
             courseid=course_id,
+            enrollment_type=enrollment_type,
         )
 
         try:
@@ -253,6 +266,7 @@ def student_save_ajax(request):
         'idno': first_student.idno,
         'fullname': first_student.fullname,
         'courseid': first_student.courseid,
+        'enrollment_type': first_student.enrollment_type,
         'created_count': len(created_students),
     })
 

@@ -55,6 +55,7 @@
             <th>Student ID</th>
             <th>Full Name</th>
             <th>Course</th>
+            <th>Type</th>
             <th class="w-1">Attendance</th>
             <th class="w-1">Actions</th>
           </tr>
@@ -66,6 +67,13 @@
     <td class="fw-medium">{{ student.idno }}</td>
     <td class="text-muted">{{ student.fullname }}</td>
     <td class="text-muted">{{ student.course_display }}</td>
+    <td>
+      {% if student.enrollment_type == 'irregular' %}
+      <span class="badge bg-azure-lt text-azure">{{ student.enrollment_type_display }}</span>
+      {% else %}
+      <span class="badge bg-green-lt text-green">{{ student.enrollment_type_display }}</span>
+      {% endif %}
+    </td>
     <td>
       <div class="d-flex gap-2 align-items-start flex-row">
         <div class="d-flex flex-column align-items-center">
@@ -111,7 +119,7 @@
         <a href="{% url 'attendance:attendance_calendar' student.id %}" class="btn btn-ghost-info btn-icon btn-sm" title="View Attendance Calendar">
           <i class="fas fa-calendar-alt"></i>
         </a>
-        <button type="button" class="btn btn-ghost-primary btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#studentModal" data-mode="edit" data-id="{{ student.id }}" data-idno="{{ student.idno }}" data-fullname="{{ student.fullname }}" data-courseid="{{ student.courseid }}" title="Edit">
+        <button type="button" class="btn btn-ghost-primary btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#studentModal" data-mode="edit" data-id="{{ student.id }}" data-idno="{{ student.idno }}" data-fullname="{{ student.fullname }}" data-courseid="{{ student.courseid }}" data-enrollment-type="{{ student.enrollment_type }}" title="Edit">
           <i class="fas fa-edit"></i>
         </button>
         <button type="button" class="btn btn-ghost-danger btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#deleteStudentModal" data-id="{{ student.id }}" data-name="{{ student.fullname }}" title="Delete">
@@ -122,7 +130,7 @@
   </tr>
   {% empty %}
   <tr>
-    <td colspan="5" class="text-center text-muted py-4">No students found.</td>
+    <td colspan="6" class="text-center text-muted py-4">No students found.</td>
   </tr>
   {% endfor %}
 </tbody>
@@ -200,6 +208,19 @@
               <input type="text" name="fullname" id="student_fullname" class="form-control" required>
             </div>
             <div class="col-12">
+              <label class="form-label">Enrollment Type</label>
+              <div class="form-selectgroup">
+                <label class="form-selectgroup-item">
+                  <input type="radio" name="enrollment_type" value="regular" class="form-selectgroup-input" checked>
+                  <span class="form-selectgroup-label">Regular</span>
+                </label>
+                <label class="form-selectgroup-item">
+                  <input type="radio" name="enrollment_type" value="irregular" class="form-selectgroup-input">
+                  <span class="form-selectgroup-label">Irregular</span>
+                </label>
+              </div>
+            </div>
+            <div class="col-12">
               <label class="form-label">Courses</label>
               <select name="courseid" id="student_courseid" class="form-select" multiple size="6" required>
                 {% for course in courses %}
@@ -260,6 +281,14 @@
     });
   }
 
+  function setEnrollmentType(enrollmentType) {
+    const radios = document.querySelectorAll('input[name="enrollment_type"]');
+    const value = enrollmentType || 'regular';
+    radios.forEach(function(radio) {
+      radio.checked = radio.value === value;
+    });
+  }
+
   function resetForm() {
     form.reset();
     document.getElementById('student_id').value = '';
@@ -292,6 +321,7 @@
         return item.trim();
       }).filter(Boolean);
       setCourseSelection(courseIds);
+      setEnrollmentType(button.getAttribute('data-enrollment-type'));
     } else {
       resetForm();
     }
