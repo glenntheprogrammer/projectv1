@@ -14,6 +14,7 @@ from django.views.decorators.http import require_http_methods
 
 from apps.attendance.models import Tblattendance
 from apps.courses.models import Tblcourse
+from apps.scoping import scoped_attendance, scoped_courses, scoped_students
 from apps.students.models import Tblstudents
 
 User = get_user_model()
@@ -157,11 +158,11 @@ def logout_view(request):
 
 @login_required(login_url='login')
 def dashboard(request):
-    total_courses = Tblcourse.objects.count()
-    total_students = Tblstudents.objects.count()
-    total_attendance_records = Tblattendance.objects.count()
+    total_courses = scoped_courses(request.user).count()
+    total_students = scoped_students(request.user).count()
+    total_attendance_records = scoped_attendance(request.user).count()
 
-    attendance_status_counts = Tblattendance.objects.values('status').annotate(count=models.Count('status'))
+    attendance_status_counts = scoped_attendance(request.user).values('status').annotate(count=models.Count('status'))
     status_map = {STATUS_NAME_MAP.get(item['status'].lower(), item['status'].lower()): item['count'] for item in attendance_status_counts}
     present_count = status_map.get('present', 0)
     late_count = status_map.get('late', 0)
@@ -171,9 +172,9 @@ def dashboard(request):
     date_range = [today - timedelta(days=i) for i in range(13, -1, -1)]
     date_labels = [d.strftime('%b %d') for d in date_range]
 
-    students = Tblstudents.objects.all().order_by('fullname')
+    students = scoped_students(request.user).order_by('fullname')
 
-    attendance_qs = Tblattendance.objects.filter(
+    attendance_qs = scoped_attendance(request.user).filter(
         attend_date__gte=date_range[0],
         attend_date__lte=today,
     ).values('student_id', 'attend_date', 'status')
@@ -203,7 +204,7 @@ def dashboard(request):
     # --- Students per course (top 8) ---
     course_palette = ['#206bc4', '#2fb344', '#f59f00', '#d63939', '#922ea4', '#17a2b8', '#6c757d', '#49566c']
     course_counts = (
-        Tblstudents.objects
+        scoped_students(request.user)
         .values('courseid')
         .annotate(count=models.Count('courseid'))
         .order_by('-count')[:8]

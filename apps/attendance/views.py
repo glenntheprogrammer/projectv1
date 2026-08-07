@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_POST
 
+from apps.scoping import scoped_student
 from apps.students.models import Tblstudents
 from .models import Tblattendance
 
@@ -33,7 +34,7 @@ def attendance_save_ajax(request):
     if status not in {'1', '2', '3', '4'}:
         return JsonResponse({'error': 'Please choose a valid attendance status.'}, status=400)
 
-    student = get_object_or_404(Tblstudents, pk=student_id)
+    student = scoped_student(request.user, student_id)
 
     try:
         attendance, created = Tblattendance.objects.update_or_create(
@@ -58,7 +59,7 @@ def attendance_save_ajax(request):
 
 @login_required(login_url='login')
 def attendance_calendar_view(request, student_id):
-    student = get_object_or_404(Tblstudents, pk=student_id)
+    student = scoped_student(request.user, student_id)
 
     year = int(request.GET.get('year', date.today().year))
     month = int(request.GET.get('month', date.today().month))

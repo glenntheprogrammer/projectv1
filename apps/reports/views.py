@@ -5,16 +5,17 @@ from django.shortcuts import render
 
 from apps.attendance.models import Tblattendance
 from apps.courses.models import Tblcourse
+from apps.scoping import scoped_courses, scoped_students
 from apps.students.models import Tblstudents
 
 
 @login_required(login_url='login')
 def course_reports_view(request):
-    courses = Tblcourse.objects.filter(status='active').order_by('name')
+    courses = scoped_courses(request.user).filter(status='active').order_by('name')
     report_rows = []
 
     for course in courses:
-        students = Tblstudents.objects.filter(courseid=course.courseid).order_by('fullname')
+        students = scoped_students(request.user).filter(courseid=course.courseid).order_by('fullname')
         course_report = {
             'course': course,
             'most_late': [],

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -17,6 +18,13 @@ class Tblstudents(models.Model):
         max_length=20,
         choices=ENROLLMENT_TYPES,
         default=REGULAR,
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='students',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
 
     class Meta:

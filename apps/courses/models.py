@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -12,6 +13,13 @@ class Tblcourse(models.Model):
     section = models.CharField(max_length=100)
     schoolyr = models.CharField(max_length=100)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='courses',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         db_table = 'tblcourse'

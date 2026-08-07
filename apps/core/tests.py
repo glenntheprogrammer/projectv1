@@ -10,8 +10,8 @@ from apps.students.models import Tblstudents
 class DashboardViewTests(TestCase):
     def test_dashboard_context_contains_summary_metrics(self):
         user = get_user_model().objects.create_user(username='admin', password='secret1234')
-        course = Tblcourse.objects.create(name='Math', section='A', schoolyr='2025-2026')
-        student = Tblstudents.objects.create(idno='1001', fullname='John Doe', courseid=str(course.courseid))
+        course = Tblcourse.objects.create(name='Math', section='A', schoolyr='2025-2026', user=user)
+        student = Tblstudents.objects.create(idno='1001', fullname='John Doe', courseid=str(course.courseid), user=user)
         Tblattendance.objects.create(attend_date='2026-07-29', student_id=student, status='1')
         Tblattendance.objects.create(attend_date='2026-07-30', student_id=student, status='2')
 

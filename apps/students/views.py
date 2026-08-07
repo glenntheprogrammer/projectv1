@@ -10,10 +10,11 @@ from datetime import date
 
 from apps.attendance.models import Tblattendance
 from apps.courses.models import Tblcourse
+from apps.scoping import scoped_courses, scoped_student, scoped_students
 from .models import Tblstudents
 
 
-def _get_course_display(course_id):
+def _get_course_display(course_id, user=None):
     if not course_id:
         return ''
 
@@ -21,7 +22,7 @@ def _get_course_display(course_id):
     if not course_ids:
         return course_id
 
-    courses = Tblcourse.objects.filter(courseid__in=course_ids)
+    courses = scoped_courses(user).filter(courseid__in=course_ids)
     course_map = {
         str(course.courseid): f"{course.name} - {course.section} ({course.schoolyr})"
         for course in courses
@@ -34,7 +35,7 @@ def _get_course_display(course_id):
 def student_list_page(request, course_id=None):
     query = request.GET.get('q', '').strip()
 
-    students_list = Tblstudents.objects.select_related().all().order_by('fullname')
+    students_list = scoped_students(request.user).select_related().order_by('fullname')
 
     if course_id:
         students_list = students_list.filter(courseid=course_id)
@@ -50,17 +51,20 @@ def student_list_page(request, course_id=None):
     page_number = request.GET.get('page', 1)
     students = paginator.get_page(page_number)
 
-    courses = Tblcourse.objects.filter(status='active').order_by('name')
+    courses = scoped_courses(request.user).filter(status='active').order_by('name')
 
     selected_course_name = None
     if course_id:
-        selected_course = Tblcourse.objects.filter(courseid=course_id).first()
+        selected_course = scoped_courses(request.user).filter(courseid=course_id).first()
         if selected_course:
             selected_course_name = selected_course.name
 
     student_rows = []
     today_records = dict(
-        Tblattendance.objects.filter(attend_date=date.today()).values_list('student_id', 'status')
+        Tblattendance.objects.filter(
+            attend_date=date.today(),
+            student_id__in=scoped_students(request.user).values_list('id', flat=True),
+        ).values_list('student_id', 'status')
     )
 
     for student in students:
@@ -74,7 +78,7 @@ def student_list_page(request, course_id=None):
             'courseid': student.courseid,
             'enrollment_type': student.enrollment_type,
             'enrollment_type_display': student.get_enrollment_type_display(),
-            'course_display': _get_course_display(student.courseid),
+            'course_display': _get_course_display(student.courseid, request.user),
             'today_status': today_records.get(student.id, ''),
             'attendance_counts': {
                 'present_count': attendance_map.get('1', 0),
@@ -99,7 +103,7 @@ def student_list_ajax(request):
     query = request.GET.get('q', '').strip()
     course_id = request.GET.get('course_id', '').strip()
 
-    students_list = Tblstudents.objects.all().order_by('fullname')
+    students_list = scoped_students(request.user).order_by('fullname')
 
     if course_id:
         students_list = students_list.filter(courseid=course_id)
@@ -127,7 +131,7 @@ def student_list_ajax(request):
 
 @login_required(login_url='login')
 def student_get_ajax(request, pk):
-    student = get_object_or_404(Tblstudents, pk=pk)
+    student = scoped_student(request.user, pk)
     return JsonResponse({
         'id': student.id,
         'idno': student.idno,
@@ -143,7 +147,7 @@ def student_save_ajax(request):
     student_id = request.POST.get('id')
 
     if student_id:
-        student = get_object_or_404(Tblstudents, pk=student_id)
+        student = scoped_student(request.user, student_id)
     else:
         student = Tblstudents()
 
@@ -167,7 +171,7 @@ def student_save_ajax(request):
         return JsonResponse({'error': 'Invalid enrollment type.'}, status=400)
 
     existing_course_ids = set(
-        str(cid) for cid in Tblcourse.objects.filter(
+        str(cid) for cid in scoped_courses(request.user).filter(
             courseid__in=course_ids
         ).values_list('courseid', flat=True)
     )
@@ -185,7 +189,7 @@ def student_save_ajax(request):
 
     # UPDATE
     if student.pk and len(course_ids) == 1:
-        duplicate_qs = Tblstudents.objects.filter(
+        duplicate_qs = scoped_students(request.user).filter(
             fullname=fullname,
             courseid=course_ids[0],
         ).exclude(pk=student.pk)
@@ -221,7 +225,7 @@ def student_save_ajax(request):
     created_students = []
 
     for course_id in course_ids:
-        duplicate_qs = Tblstudents.objects.filter(
+        duplicate_qs = scoped_students(request.user).filter(
             fullname=fullname,
             courseid=course_id,
         )
@@ -237,6 +241,7 @@ def student_save_ajax(request):
             fullname=fullname,
             courseid=course_id,
             enrollment_type=enrollment_type,
+            user=request.user,
         )
 
         try:
@@ -273,6 +278,6 @@ def student_save_ajax(request):
 @login_required(login_url='login')
 @require_POST
 def student_delete_ajax(request, pk):
-    student = get_object_or_404(Tblstudents, pk=pk)
+    student = scoped_student(request.user, pk)
     student.delete()
     return JsonResponse({'status': 'deleted'})

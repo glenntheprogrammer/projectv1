@@ -13,7 +13,7 @@ from apps.students.models import Tblstudents
 class CourseScheduleTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(username='tester', password='secret123')
-        self.course = Tblcourse.objects.create(name='BSIT', section='1A', schoolyr='2024-2025')
+        self.course = Tblcourse.objects.create(name='BSIT', section='1A', schoolyr='2024-2025', user=self.user)
 
     def test_schedule_save_creates_schedule(self):
         self.client.force_login(self.user)
@@ -87,7 +87,7 @@ class CourseScheduleTests(TestCase):
 class QuizQuestionSaveTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(username='tester', password='secret123')
-        self.course = Tblcourse.objects.create(name='Test Course', section='A', schoolyr='2024-2025')
+        self.course = Tblcourse.objects.create(name='Test Course', section='A', schoolyr='2024-2025', user=self.user)
         self.quiz = Quiz.objects.create(course=self.course, title='Sample Quiz')
 
     def test_identification_question_saves_text_answer(self):
@@ -128,10 +128,10 @@ class QuizQuestionSaveTests(TestCase):
 class CourseStudentsExportTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(username='tester', password='secret123')
-        self.course = Tblcourse.objects.create(name='BSIT', section='1A', schoolyr='2024-2025')
-        Tblstudents.objects.create(idno='2024-001', fullname='Alice Doe', courseid=str(self.course.courseid))
-        Tblstudents.objects.create(idno='2024-002', fullname='Bob Smith', courseid=str(self.course.courseid))
-        Tblstudents.objects.create(idno='2024-003', fullname='Carol Lee', courseid='999')
+        self.course = Tblcourse.objects.create(name='BSIT', section='1A', schoolyr='2024-2025', user=self.user)
+        Tblstudents.objects.create(idno='2024-001', fullname='Alice Doe', courseid=str(self.course.courseid), user=self.user)
+        Tblstudents.objects.create(idno='2024-002', fullname='Bob Smith', courseid=str(self.course.courseid), user=self.user)
+        Tblstudents.objects.create(idno='2024-003', fullname='Carol Lee', courseid='999', user=self.user)
 
     def test_export_returns_excel_with_students(self):
         self.client.force_login(self.user)

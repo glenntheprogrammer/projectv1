@@ -8,8 +8,8 @@ from apps.students.models import Tblstudents
 class ReportsViewTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(username='reporter', password='secret123')
-        self.course = Tblcourse.objects.create(name='Math', section='A', schoolyr='2025-2026')
-        self.student = Tblstudents.objects.create(idno='2001', fullname='Alex Doe', courseid=self.course.courseid)
+        self.course = Tblcourse.objects.create(name='Math', section='A', schoolyr='2025-2026', user=self.user)
+        self.student = Tblstudents.objects.create(idno='2001', fullname='Alex Doe', courseid=self.course.courseid, user=self.user)
 
     def test_reports_page_renders(self):
         self.client.login(username='reporter', password='secret123')

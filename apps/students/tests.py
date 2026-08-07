@@ -25,8 +25,8 @@ class StudentCourseDuplicationTests(TestCase):
 class StudentAttendanceCountsTests(TestCase):
     def test_student_list_page_includes_attendance_status_counts(self):
         self.user = get_user_model().objects.create_user(username='tester', password='secret')
-        course = Tblcourse.objects.create(name='Math', section='A', schoolyr='2025-2026')
-        student = Tblstudents.objects.create(idno='1001', fullname='John Doe', courseid=course.courseid)
+        course = Tblcourse.objects.create(name='Math', section='A', schoolyr='2025-2026', user=self.user)
+        student = Tblstudents.objects.create(idno='1001', fullname='John Doe', courseid=course.courseid, user=self.user)
 
         Tblattendance.objects.create(attend_date='2025-08-01', student_id=student, status='1')
         Tblattendance.objects.create(attend_date='2025-08-02', student_id=student, status='2')
@@ -47,8 +47,8 @@ class StudentSaveAjaxTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.user = get_user_model().objects.create_user(username='tester', password='secret')
-        self.course_one = Tblcourse.objects.create(name='Math', section='A', schoolyr='2025-2026')
-        self.course_two = Tblcourse.objects.create(name='Science', section='B', schoolyr='2025-2026')
+        self.course_one = Tblcourse.objects.create(name='Math', section='A', schoolyr='2025-2026', user=self.user)
+        self.course_two = Tblcourse.objects.create(name='Science', section='B', schoolyr='2025-2026', user=self.user)
         self.url = reverse('students:student_save_ajax')
 
     def test_multiple_selected_courses_create_separate_student_records(self):
@@ -70,3 +70,61 @@ class StudentSaveAjaxTests(TestCase):
             set(Tblstudents.objects.filter(idno='1001', fullname='John Doe').values_list('courseid', flat=True)),
             {str(self.course_one.courseid), str(self.course_two.courseid)},
         )
+
+    def test_user_only_sees_their_own_students(self):
+        other_user = get_user_model().objects.create_user(username='other', password='secret')
+        other_course = Tblcourse.objects.create(
+            name='Other Course', section='B', schoolyr='2025-2026', user=other_user
+        )
+        Tblstudents.objects.create(
+            idno='9999', fullname='Other Student', courseid=str(other_course.courseid), user=other_user
+        )
+
+        request = self.factory.post(self.url, {
+            'idno': '1001',
+            'fullname': 'John Doe',
+            'courseid': str(self.course_one.courseid),
+        })
+        request.user = self.user
+        student_save_ajax(request)
+
+        self.client.force_login(self.user)
+        response = self.client.get('/students/')
+
+        rows = response.context['students']
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['fullname'], 'John Doe')
+
+    def test_user_cannot_edit_other_users_student(self):
+        other_user = get_user_model().objects.create_user(username='other', password='secret')
+        other_student = Tblstudents.objects.create(
+            idno='9999', fullname='Other Student', courseid='X-001', user=other_user
+        )
+
+        self.client.force_login(self.user)
+        response = self.client.get('/students/ajax/get/{}/'.format(other_student.id))
+        self.assertEqual(response.status_code, 404)
+
+    def test_superuser_still_only_sees_their_own_students(self):
+        other_user = get_user_model().objects.create_superuser(username='other', password='secret', email='other@test.com')
+        other_course = Tblcourse.objects.create(
+            name='Other Course', section='B', schoolyr='2025-2026', user=other_user
+        )
+        Tblstudents.objects.create(
+            idno='9999', fullname='Other Student', courseid=str(other_course.courseid), user=other_user
+        )
+
+        request = self.factory.post(self.url, {
+            'idno': '1001',
+            'fullname': 'John Doe',
+            'courseid': str(self.course_one.courseid),
+        })
+        request.user = self.user
+        student_save_ajax(request)
+
+        self.client.force_login(other_user)
+        response = self.client.get('/students/')
+
+        rows = response.context['students']
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['fullname'], 'Other Student')

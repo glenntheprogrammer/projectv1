@@ -15,12 +15,20 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 from .models import Tblcourse, CourseSchedule, Quiz, QuizQuestion
 from apps.students.models import Tblstudents
+from apps.scoping import (
+    scoped_course,
+    scoped_courses,
+    scoped_quizzes,
+    scoped_quiz_questions,
+    scoped_schedules,
+    scoped_students,
+)
 
 @login_required(login_url='login')
 def course_list_page(request):
     query = request.GET.get('q', '').strip()
 
-    courses_list = Tblcourse.objects.all().order_by('name')
+    courses_list = scoped_courses(request.user).order_by('name')
 
     if query:
         courses_list = courses_list.filter(
@@ -38,7 +46,7 @@ def course_list_page(request):
     # so cast to str for a clean match against the student table.
     course_ids = [str(c.courseid) for c in courses.object_list]
     counts = (
-        Tblstudents.objects
+        scoped_students(request.user)
         .filter(courseid__in=course_ids)
         .values('courseid')
         .annotate(student_count=Count('id'))
@@ -56,7 +64,7 @@ def course_list_page(request):
 
 @login_required(login_url='login')
 def course_list_ajax(request):
-    courses_list = Tblcourse.objects.all().order_by('name')
+    courses_list = scoped_courses(request.user).order_by('name')
     paginator = Paginator(courses_list, 10)
     page_number = request.GET.get('page', 1)
     courses = paginator.get_page(page_number)
@@ -73,7 +81,7 @@ def course_list_ajax(request):
 
 @login_required(login_url='login')
 def course_get_ajax(request, pk):
-    course = get_object_or_404(Tblcourse, pk=pk)
+    course = scoped_course(request.user, pk)
     return JsonResponse({
         'courseid': course.courseid,
         'name': course.name,
@@ -88,9 +96,9 @@ def course_save_ajax(request):
     course_id = request.POST.get('courseid', '').strip()
 
     if course_id:
-        course = get_object_or_404(Tblcourse, pk=course_id)
+        course = scoped_course(request.user, course_id)
     else:
-        course = Tblcourse()
+        course = Tblcourse(user=request.user)
 
     name = request.POST.get('name', '').strip()
     section = request.POST.get('section', '').strip()
@@ -128,8 +136,8 @@ def course_save_ajax(request):
 
 @login_required(login_url='login')
 def course_students_export(request, pk):
-    course = get_object_or_404(Tblcourse, pk=pk)
-    students = Tblstudents.objects.filter(courseid=str(course.courseid)).order_by('fullname')
+    course = scoped_course(request.user, pk)
+    students = scoped_students(request.user).filter(courseid=str(course.courseid)).order_by('fullname')
 
     wb = Workbook()
     ws = wb.active
@@ -178,16 +186,16 @@ def course_students_export(request, pk):
 @login_required(login_url='login')
 @require_POST
 def course_delete_ajax(request, pk):
-    course = get_object_or_404(Tblcourse, pk=pk)
+    course = scoped_course(request.user, pk)
     course.delete()
     return JsonResponse({'status': 'deleted'})
 
 
 @login_required(login_url='login')
 def schedule_page(request):
-    courses = Tblcourse.objects.all().order_by('name')
+    courses = scoped_courses(request.user).order_by('name')
     selected_course_id = request.GET.get('course', '').strip()
-    schedules_qs = CourseSchedule.objects.select_related('course').all()
+    schedules_qs = scoped_schedules(request.user)
     if selected_course_id:
         schedules_qs = schedules_qs.filter(course_id=selected_course_id)
     schedules = schedules_qs.order_by('course__name', 'day', 'start_time')
@@ -202,7 +210,7 @@ def schedule_page(request):
 
 @login_required(login_url='login')
 def schedule_get_ajax(request, pk):
-    schedule = get_object_or_404(CourseSchedule, pk=pk)
+    schedule = get_object_or_404(scoped_schedules(request.user), pk=pk)
     return JsonResponse({
         'id': schedule.id,
         'course': schedule.course_id,
@@ -232,7 +240,7 @@ def schedule_save_ajax(request):
 
     if not course_id:
         return JsonResponse({'error': 'Course is required.'}, status=400)
-    course = get_object_or_404(Tblcourse, pk=course_id)
+    course = scoped_course(request.user, course_id)
 
     try:
         day = int(day_raw)
@@ -251,7 +259,7 @@ def schedule_save_ajax(request):
         return JsonResponse({'error': 'End time must be after the start time.'}, status=400)
 
     if schedule_id:
-        schedule = get_object_or_404(CourseSchedule, pk=schedule_id)
+        schedule = get_object_or_404(scoped_schedules(request.user), pk=schedule_id)
     else:
         schedule = CourseSchedule()
 
@@ -283,14 +291,14 @@ def schedule_save_ajax(request):
 @login_required(login_url='login')
 @require_POST
 def schedule_delete_ajax(request, pk):
-    schedule = get_object_or_404(CourseSchedule, pk=pk)
+    schedule = get_object_or_404(scoped_schedules(request.user), pk=pk)
     schedule.delete()
     return JsonResponse({'status': 'deleted'})
 
 
 @login_required(login_url='login')
 def schedule_events_ajax(request):
-    schedules = CourseSchedule.objects.select_related('course').filter(course__status='active')
+    schedules = scoped_schedules(request.user).filter(course__status='active')
 
     events = []
     for schedule in schedules:
@@ -315,7 +323,7 @@ def schedule_events_ajax(request):
 
 @login_required(login_url='login')
 def quiz_list_page(request, course_id):
-    course = get_object_or_404(Tblcourse, pk=course_id)
+    course = scoped_course(request.user, course_id)
     quizzes = course.quizzes.all().order_by('-created_at')
     selected_quiz_id = request.GET.get('quiz_id', '').strip()
     selected_quiz = None
@@ -332,7 +340,7 @@ def quiz_list_page(request, course_id):
 
 @login_required(login_url='login')
 def quiz_preview_page(request, quiz_id):
-    quiz = get_object_or_404(Quiz, pk=quiz_id)
+    quiz = get_object_or_404(scoped_quizzes(request.user), pk=quiz_id)
     questions = quiz.questions.all().order_by('order', 'id')
     questions_data = [
         {
@@ -358,11 +366,11 @@ def quiz_preview_page(request, quiz_id):
 @login_required(login_url='login')
 @require_POST
 def quiz_save_view(request, course_id):
-    course = get_object_or_404(Tblcourse, pk=course_id)
+    course = scoped_course(request.user, course_id)
     quiz_id = request.POST.get('quiz_id', '').strip()
 
     if quiz_id:
-        quiz = get_object_or_404(Quiz, pk=quiz_id, course=course)
+        quiz = get_object_or_404(scoped_quizzes(request.user), pk=quiz_id, course=course)
     else:
         quiz = Quiz(course=course)
 
@@ -384,7 +392,7 @@ def quiz_save_view(request, course_id):
 @login_required(login_url='login')
 @require_POST
 def quiz_delete_view(request, course_id, quiz_id):
-    quiz = get_object_or_404(Quiz, pk=quiz_id, course__courseid=course_id)
+    quiz = get_object_or_404(scoped_quizzes(request.user), pk=quiz_id, course__courseid=course_id)
     quiz.delete()
     return redirect('courses:quiz_list', course_id=course_id)
 
@@ -392,7 +400,7 @@ def quiz_delete_view(request, course_id, quiz_id):
 @login_required(login_url='login')
 @require_POST
 def question_save_view(request, quiz_id):
-    quiz = get_object_or_404(Quiz, pk=quiz_id)
+    quiz = get_object_or_404(scoped_quizzes(request.user), pk=quiz_id)
     question_text = request.POST.get('question_text', '').strip()
     question_type = request.POST.get('question_type', 'multiple_choice').strip().lower()
     option_a = request.POST.get('option_a', '').strip()
@@ -455,7 +463,7 @@ def question_save_view(request, quiz_id):
 @login_required(login_url='login')
 @require_POST
 def question_delete_view(request, question_id):
-    question = get_object_or_404(QuizQuestion, pk=question_id)
+    question = get_object_or_404(scoped_quiz_questions(request.user), pk=question_id)
     course_id = question.quiz.course.courseid
     question.delete()
     return redirect('courses:quiz_list', course_id=course_id)
