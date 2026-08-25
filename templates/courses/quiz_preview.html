@@ -1,12 +1,35 @@
 {% extends "theme/base.html" %}
 {% block content %}
+<style>
+  .page-title { font-size: 3rem !important; }
+  .card-title { font-size: 2.5rem !important; }
+  .page-pretitle { font-size: 1.5rem !important; }
+  .card .text-muted { font-size: 1.5rem !important; }
+  #quizStartScreen h4 { font-size: 2.8rem !important; }
+  #quizStartScreen p { font-size: 1.8rem !important; }
+  #quizStartScreen .btn { font-size: 2rem !important; padding: 1rem 3rem !important; }
+  #quizRunningScreen .fw-medium { font-size: 2.2rem !important; }
+  #timerDisplay { font-size: 3rem !important; }
+  #questionCard { font-size: 2.5rem !important; padding: 2.5rem !important; }
+  #questionCard .fw-medium { font-size: 2.8rem !important; }
+  #questionCard .text-muted { font-size: 2.2rem !important; }
+  #questionCard .text-muted div { padding: 0.5rem 0; }
+  #quizFinishedScreen h4 { font-size: 2.8rem !important; }
+  #quizFinishedScreen p { font-size: 1.8rem !important; }
+  #quizFinishedScreen .btn { font-size: 1.8rem !important; padding: 0.8rem 2rem !important; }
+  #reviewAnswersContainer .fw-medium { font-size: 2.2rem !important; }
+  #reviewAnswersContainer .text-muted { font-size: 1.7rem !important; }
+  #reviewAnswersContainer .text-muted div { padding: 0.4rem 0; }
+  #reviewAnswersContainer .text-success { font-size: 1.8rem !important; }
+  .card-header .btn { font-size: 1.3rem !important; }
+</style>
 <div class="container-xl">
   <div class="page-header d-print-none" aria-label="Page header">
     <div class="container-xl">
       <div class="row align-items-center">
         <div class="col">
           <div class="page-pretitle">Course Management</div>
-          <h2 class="page-title mb-0">{{ quiz.title }} Quiz</h2>
+          <!-- <h2 class="page-title mb-0">{{ quiz.title }} Quiz</h2> -->
         </div>
       </div>
     </div>
@@ -18,7 +41,7 @@
   <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
       <div>
-        <h3 class="card-title mb-1">Timed Quiz</h3>
+        <h2 class="">Timed Quiz</h2>
         <div class="text-muted small">{{ quiz.description|default:"No description provided." }}</div>
       </div>
       <a href="{% url 'courses:quiz_list' quiz.course.courseid %}" class="btn btn-outline-secondary btn-sm"><i class='far fa-arrow-alt-circle-left me-1'></i> Back</a>

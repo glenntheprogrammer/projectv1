@@ -54,7 +54,6 @@
             <th>#</th>
             <th>Student ID</th>
             <th>Full Name</th>
-            <th>Course</th>
             <th>Type</th>
             <th class="w-1">Attendance</th>
             <th class="w-1">Actions</th>
@@ -66,7 +65,6 @@
     <td class="text-muted">{{ forloop.counter0|add:students_page.start_index }}</td>
     <td class="fw-medium">{{ student.idno }}</td>
     <td class="text-muted">{{ student.fullname }}</td>
-    <td class="text-muted">{{ student.course_display }}</td>
     <td>
       {% if student.enrollment_type == 'irregular' %}
       <span class="badge bg-azure-lt text-azure">{{ student.enrollment_type_display }}</span>
