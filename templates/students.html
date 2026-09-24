@@ -48,14 +48,14 @@
       </div>
     </div>
     <div class="table-responsive">
-      <table class="table table-vcenter card-table" id="studentsTable">
+      <table class="table table-vcenter table-hover card-table text-nowrap" id="studentsTable">
         <thead>
           <tr>
             <th>#</th>
             <th>Student ID</th>
             <th>Full Name</th>
             <th>Type</th>
-            <th class="w-1">Attendance</th>
+            <th>Attendance</th>
             <th class="w-1">Actions</th>
           </tr>
         </thead>
@@ -63,7 +63,7 @@
   {% for student in students %}
   <tr data-row-id="{{ student.id }}">
     <td class="text-muted">{{ forloop.counter0|add:students_page.start_index }}</td>
-    <td class="fw-medium">{{ student.idno }}</td>
+    <td class="fw-semibold">{{ student.idno }}</td>
     <td class="text-muted">{{ student.fullname }}</td>
     <td>
       {% if student.enrollment_type == 'irregular' %}
@@ -113,22 +113,40 @@
       </div>
     </td>
     <td>
-      <div class="d-flex gap-2 align-items-center">
-        <a href="{% url 'attendance:attendance_calendar' student.id %}" class="btn btn-ghost-info btn-icon btn-sm" title="View Attendance Calendar">
-          <i class="fas fa-calendar-alt"></i>
-        </a>
-        <button type="button" class="btn btn-ghost-primary btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#studentModal" data-mode="edit" data-id="{{ student.id }}" data-idno="{{ student.idno }}" data-fullname="{{ student.fullname }}" data-courseid="{{ student.courseid }}" data-enrollment-type="{{ student.enrollment_type }}" title="Edit">
-          <i class="fas fa-edit"></i>
+      <div class="dropdown">
+        <button type="button" class="btn btn-ghost-secondary btn-icon btn-sm" data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+          <i class="fas fa-ellipsis-v"></i>
         </button>
-        <button type="button" class="btn btn-ghost-danger btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#deleteStudentModal" data-id="{{ student.id }}" data-name="{{ student.fullname }}" title="Delete">
-          <i class="fas fa-trash-alt"></i>
-        </button>
+        <div class="dropdown-menu dropdown-menu-end">
+          <a href="{% url 'attendance:attendance_calendar' student.id %}" class="dropdown-item">
+            <i class="fas fa-calendar-alt me-2 text-info"></i> Attendance Calendar
+          </a>
+          <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#studentModal" data-mode="edit" data-id="{{ student.id }}" data-idno="{{ student.idno }}" data-fullname="{{ student.fullname }}" data-courseid="{{ student.courseid }}" data-enrollment-type="{{ student.enrollment_type }}">
+            <i class="fas fa-edit me-2 text-primary"></i> Edit
+          </button>
+          <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteStudentModal" data-id="{{ student.id }}" data-name="{{ student.fullname }}">
+            <i class="fas fa-trash-alt me-2 text-danger"></i> Delete
+          </button>
+        </div>
       </div>
     </td>
   </tr>
   {% empty %}
   <tr>
-    <td colspan="6" class="text-center text-muted py-4">No students found.</td>
+    <td colspan="6">
+      <div class="empty py-5">
+        <div class="empty-icon">
+          <i class="fas fa-user-graduate fa-2x text-muted"></i>
+        </div>
+        <p class="empty-title">No students found</p>
+        <p class="empty-subtitle">Try adjusting your search or add a new student.</p>
+        <div class="empty-action">
+          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#studentModal" data-mode="create">
+            <i class="fas fa-plus-circle me-2"></i> Add Student
+          </button>
+        </div>
+      </div>
+    </td>
   </tr>
   {% endfor %}
 </tbody>

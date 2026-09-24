@@ -18,7 +18,7 @@
 	  "theme": "light",
 	  "theme-base": "gray",
 	  "theme-font": "sans-serif",
-	  "theme-primary": "blue",
+	  "theme-primary": "indigo",
 	  "theme-radius": "1"
 	};
 	const params = new Proxy(new URLSearchParams(window.location.search), {

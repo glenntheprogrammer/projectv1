@@ -19,7 +19,7 @@
         </div>
 
         <!-- TITLE ONLY (MOBILE) -->
-        <h2 class="page-title mb-0 d-md-none">Home Page</h2>
+        <h2 class="page-title mb-0 d-md-none">User Management</h2>
 
       </div>
 
@@ -72,7 +72,7 @@
             </div>
         </div>
         <div class="table-responsive">
-            <table class="table table-vcenter card-table" id="usersTable">
+            <table class="table table-vcenter table-hover card-table text-nowrap" id="usersTable">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -152,7 +152,15 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">No users found.</td>
+                        <td colspan="8">
+                            <div class="empty py-5">
+                                <div class="empty-icon">
+                                    <i class="fas fa-users fa-2x text-muted"></i>
+                                </div>
+                                <p class="empty-title">No users found</p>
+                                <p class="empty-subtitle">Try adjusting your search.</p>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

@@ -1,61 +1,30 @@
 {% extends "theme/base.html" %}
 {% load static %}
 {% block content %}
-<style>
-.stat-card { overflow: hidden; position: relative; }
-.stat-card::after {
-  content: "";
-  position: absolute;
-  inset-inline-end: -2.5rem;
-  inset-block-start: -2.5rem;
-  width: 8rem;
-  height: 8rem;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  pointer-events: none;
-}
-.stat-card .stat-card-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.22);
-  color: #fff;
-  font-size: 1.25rem;
-  flex-shrink: 0;
-}
-.stat-card .tracking-wide { letter-spacing: 0.06em; }
-.stat-card-primary { background: linear-gradient(135deg, #066fd1, #4299e1); }
-.stat-card-success { background: linear-gradient(135deg, #2fb344, #40c74b); }
-.stat-card-info { background: linear-gradient(135deg, #17a2b8, #4299e1); }
-.stat-card-warning { background: linear-gradient(135deg, #f59f00, #f76707); }
-</style>
-<div class="row row-deck row-cards">
+<div class="container-xl">
   <div class="page-header d-print-none" aria-label="Page header">
-    <div class="row align-items-center">
-      <div class="col">
-        <div class="page-pretitle">Overview</div>
-        <h2 class="page-title mb-0">Attendance Dashboard</h2>
-      </div>
-      <div class="col-auto">
-        <div class="btn-list">
-          <!-- <a href="" class="btn btn-primary">
-            <i class="fas fa-book me-1"></i> Manage Courses
-          </a> -->
+    <div class="container-xl">
+      <div class="row align-items-center">
+        <div class="col">
+          <div class="page-pretitle">Overview</div>
+          <div class="d-flex align-items-center gap-3 flex-wrap d-none d-md-flex">
+            <h2 class="page-title mb-0">Attendance Dashboard</h2>
+          </div>
+          <h2 class="page-title mb-0 d-md-none">Attendance Dashboard</h2>
         </div>
       </div>
     </div>
   </div>
+  <br>
 
+  <div class="row row-deck row-cards">
   <div class="col-sm-6 col-lg-3">
-    <div class="card card-sm border-0 shadow-sm stat-card stat-card-primary">
+    <div class="card card-sm border-0 dh-stat-card stat-card-primary">
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between">
           <div class="text-white">
-            <div class="text-white-50 fw-medium text-uppercase small tracking-wide">Total Courses</div>
-            <div class="h2 mb-0 fw-bold">{{ total_courses }}</div>
+            <div class="stat-label">Total Courses</div>
+            <div class="stat-value mt-1">{{ total_courses }}</div>
           </div>
           <div class="stat-card-icon">
             <i class="fas fa-school"></i>
@@ -66,12 +35,12 @@
   </div>
 
   <div class="col-sm-6 col-lg-3">
-    <div class="card card-sm border-0 shadow-sm stat-card stat-card-success">
+    <div class="card card-sm border-0 dh-stat-card stat-card-success">
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between">
           <div class="text-white">
-            <div class="text-white-50 fw-medium text-uppercase small tracking-wide">Total Students</div>
-            <div class="h2 mb-0 fw-bold">{{ total_students }}</div>
+            <div class="stat-label">Total Students</div>
+            <div class="stat-value mt-1">{{ total_students }}</div>
           </div>
           <div class="stat-card-icon">
             <i class="fas fa-users"></i>
@@ -82,12 +51,12 @@
   </div>
 
   <div class="col-sm-6 col-lg-3">
-    <div class="card card-sm border-0 shadow-sm stat-card stat-card-info">
+    <div class="card card-sm border-0 dh-stat-card stat-card-info">
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between">
           <div class="text-white">
-            <div class="text-white-50 fw-medium text-uppercase small tracking-wide">Attendance Records</div>
-            <div class="h2 mb-0 fw-bold">{{ total_attendance_records }}</div>
+            <div class="stat-label">Attendance Records</div>
+            <div class="stat-value mt-1">{{ total_attendance_records }}</div>
           </div>
           <div class="stat-card-icon">
             <i class="fas fa-clipboard-check"></i>
@@ -98,12 +67,12 @@
   </div>
 
   <div class="col-sm-6 col-lg-3">
-    <div class="card card-sm border-0 shadow-sm stat-card stat-card-warning">
+    <div class="card card-sm border-0 dh-stat-card stat-card-warning">
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between">
           <div class="text-white">
-            <div class="text-white-50 fw-medium text-uppercase small tracking-wide">Late Entries</div>
-            <div class="h2 mb-0 fw-bold">{{ late_count }}</div>
+            <div class="stat-label">Late Entries</div>
+            <div class="stat-value mt-1">{{ late_count }}</div>
           </div>
           <div class="stat-card-icon">
             <i class="fas fa-clock"></i>
@@ -141,30 +110,12 @@
     </div>
   </div>
 
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <h3 class="card-title">Class Schedules</h3>
-          <div class="text-muted text-sm">Weekly schedule per course</div>
-        </div>
-        <div class="card-actions">
-          <a href="{% url 'courses:schedule_list' %}" class="btn btn-outline-primary btn-sm">
-            <i class="fas fa-cog me-1"></i> Manage Schedules
-          </a>
-        </div>
-      </div>
-      <div class="card-body">
-        <div id="calendar-schedule"></div>
-      </div>
-    </div>
   </div>
 
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'libs/fullcalendar/index.global.min.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const trend = {{ attendance_trend|safe }};
@@ -212,31 +163,6 @@ document.addEventListener('DOMContentLoaded', function () {
     legend: { position: 'bottom' },
     tooltip: { theme: 'dark', y: { formatter: function (val) { return val + ' students'; } } },
   }).render();
-
-  const calendarEl = document.getElementById('calendar-schedule');
-  if (calendarEl && window.FullCalendar) {
-    new FullCalendar.Calendar(calendarEl, {
-      initialView: 'timeGridWeek',
-      slotMinTime: '07:00:00',
-      slotMaxTime: '20:00:00',
-      nowIndicator: true,
-      height: 'auto',
-      headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay',
-      },
-      events: '{% url "courses:schedule_events_ajax" %}',
-      eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: 'short' },
-      eventDidMount: function (info) {
-        const room = info.event.extendedProps.room;
-        if (room) {
-          info.el.querySelector('.fc-event-title') &&
-            (info.el.querySelector('.fc-event-title').textContent += '  (' + room + ')');
-        }
-      },
-    }).render();
-  }
 });
 </script>
 {% endblock %}

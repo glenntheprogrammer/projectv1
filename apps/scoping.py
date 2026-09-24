@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 
 from apps.attendance.models import Tblattendance
-from apps.courses.models import Tblcourse, CourseSchedule, Quiz, QuizQuestion
+from apps.courses.models import Tblcourse, Quiz, QuizQuestion
 from apps.students.models import Tblstudents
 
 
@@ -23,10 +23,6 @@ def scoped_course(user, pk):
 
 def scoped_student(user, pk):
     return get_object_or_404(scoped_students(user), pk=pk)
-
-
-def scoped_schedules(user):
-    return CourseSchedule.objects.select_related('course').filter(course__user=user)
 
 
 def scoped_quizzes(user):

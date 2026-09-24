@@ -45,7 +45,7 @@
       </div>
     </div>
     <div class="table-responsive">
-      <table class="table table-vcenter card-table" id="coursesTable">
+      <table class="table table-vcenter table-hover card-table text-nowrap" id="coursesTable">
         <thead>
           <tr>
             <th>#</th>
@@ -53,7 +53,7 @@
             <th>Year & Section</th>
             <th>School Year</th>
             <th>Status</th>
-            <th>Number of Students</th>
+            <th>Students</th>
             <th class="w-1">Actions</th>
           </tr>
         </thead>
@@ -61,7 +61,7 @@
         {% for course in courses %}
         <tr data-row-id="{{ course.courseid }}">
             <td class="text-muted">{{ forloop.counter0|add:courses.start_index }}</td>
-            <td class="fw-medium">{{ course.name }}</td>
+            <td class="fw-semibold">{{ course.name }}</td>
             <td class="text-muted">{{ course.section }}</td>
             <td class="text-muted">{{ course.schoolyr }}</td>
             <td>
@@ -71,35 +71,50 @@
               <span class="badge bg-secondary-lt text-secondary">Inactive</span>
               {% endif %}
             </td>
-            <td class="text-center">
-            <span class="badge bg-blue-lt">{{ course.student_count }}</span>
+            <td>
+              <span class="badge bg-primary-lt text-primary count-badge">{{ course.student_count }}</span>
             </td>
             <td>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-ghost-primary btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#courseModal" data-mode="edit" data-id="{{ course.courseid }}" data-name="{{ course.name }}" data-section="{{ course.section }}" data-schoolyr="{{ course.schoolyr }}" data-status="{{ course.status }}" title="Edit">
-                <i class="fas fa-edit"></i>
+              <div class="dropdown">
+                <button type="button" class="btn btn-ghost-secondary btn-icon btn-sm" data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+                  <i class="fas fa-ellipsis-v"></i>
                 </button>
-                <a href="{% url 'students:student_list_by_course' course.courseid %}" class="btn btn-ghost-secondary btn-icon btn-sm" title="View Students">
-                <i class="fas fa-user-graduate"></i>
-                </a>
-                <a href="{% url 'courses:schedule_list' %}?course={{ course.courseid }}" class="btn btn-ghost-warning btn-icon btn-sm" title="Manage Schedule">
-                <i class="fas fa-calendar-alt"></i>
-                </a>
-                <a href="{% url 'courses:course_students_export' course.courseid %}" class="btn btn-ghost-success btn-icon btn-sm" title="Export Students to Excel">
-                <i class="fas fa-file-excel"></i>
-                </a>
-                <a href="{% url 'courses:quiz_list' course.courseid %}" class="btn btn-ghost-info btn-icon btn-sm" title="Manage Quizzes">
-                <i class="fas fa-award"></i>
-                </a>
-                <button type="button" class="btn btn-ghost-danger btn-icon btn-sm" data-bs-toggle="modal" data-bs-target="#deleteCourseModal" data-id="{{ course.courseid }}" data-name="{{ course.name }}" title="Delete">
-                <i class="fas fa-trash-alt"></i>
-                </button>
-            </div>
+                <div class="dropdown-menu dropdown-menu-end">
+                  <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#courseModal" data-mode="edit" data-id="{{ course.courseid }}" data-name="{{ course.name }}" data-section="{{ course.section }}" data-schoolyr="{{ course.schoolyr }}" data-status="{{ course.status }}">
+                    <i class="fas fa-edit me-2 text-primary"></i> Edit
+                  </button>
+                  <a href="{% url 'students:student_list_by_course' course.courseid %}" class="dropdown-item">
+                    <i class="fas fa-user-graduate me-2 text-secondary"></i> View Students
+                  </a>
+                  <a href="{% url 'courses:course_students_export' course.courseid %}" class="dropdown-item">
+                    <i class="fas fa-file-excel me-2 text-success"></i> Export Students
+                  </a>
+                  <a href="{% url 'courses:quiz_list' course.courseid %}" class="dropdown-item">
+                    <i class="fas fa-award me-2 text-info"></i> Manage Quizzes
+                  </a>
+                  <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteCourseModal" data-id="{{ course.courseid }}" data-name="{{ course.name }}">
+                    <i class="fas fa-trash-alt me-2 text-danger"></i> Delete
+                  </button>
+                </div>
+              </div>
             </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="6" class="text-center text-muted py-4">No courses found.</td>
+            <td colspan="7">
+                <div class="empty py-5">
+                    <div class="empty-icon">
+                        <i class="fas fa-book fa-2x text-muted"></i>
+                    </div>
+                    <p class="empty-title">No courses found</p>
+                    <p class="empty-subtitle">Try adjusting your search or add a new course.</p>
+                    <div class="empty-action">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#courseModal" data-mode="create">
+                            <i class="fas fa-plus-circle me-2"></i> Add Course
+                        </button>
+                    </div>
+                </div>
+            </td>
         </tr>
         {% endfor %}
         </tbody>
@@ -259,7 +274,7 @@
       resetForm();
     }
   });
-10
+
   deleteModalEl.addEventListener('show.bs.modal', function(event) {
     const button = event.relatedTarget;
     if (button) {
