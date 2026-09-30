@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'apps.students',
     'apps.attendance',
     'apps.reports',
+    'apps.termsettings',
+    'apps.info',
 ]
 
 MIDDLEWARE = [
@@ -68,6 +70,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.attendance.context_processors.active_term',
             ],
         },
     },

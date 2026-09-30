@@ -14,12 +14,12 @@ class AttendanceViewTests(TestCase):
         Tblattendance.objects.create(attend_date=date.today(), student_id=self.student, status='1')
 
     def test_attendance_calendar_view_requires_login(self):
-        response = self.client.get('/attendance/calendar/1/')
+        response = self.client.get(f'/attendance/calendar/{self.student.id}/')
         self.assertEqual(response.status_code, 302)
 
     def test_attendance_calendar_view_renders(self):
         self.client.login(username='tester', password='secret123')
-        response = self.client.get('/attendance/calendar/1/')
+        response = self.client.get(f'/attendance/calendar/{self.student.id}/')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Attendance Calendar')
 

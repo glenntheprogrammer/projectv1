@@ -28,6 +28,8 @@ urlpatterns = [
     path('students/', include('apps.students.urls')),
     path('attendance/', include('apps.attendance.urls')),
     path('reports/', include('apps.reports.urls')),
+    path('settings/', include('apps.termsettings.urls')),
+    path('info/', include('apps.info.urls')),
 ]
 
 if settings.DEBUG:

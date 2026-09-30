@@ -36,6 +36,12 @@
         <div class="page-wrapper">
             <div class="page-body">
                 <div class="container-xl">
+                    {% if request.user.is_authenticated %}
+                    <div class="dh-term-chip mb-3">
+                        <span class="dh-term-chip-label">Active Term</span>
+                        <span class="badge bg-primary text-white">{{ active_term_label }}</span>
+                    </div>
+                    {% endif %}
                     {% block content %}
                     {% endblock %}
                 </div>

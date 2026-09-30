@@ -28,7 +28,7 @@
       </div>
     </form>
 
-    <button type="button" class="btn btn-primary mt-n4" data-bs-toggle="modal" data-bs-target="#courseModal" data-mode="create">
+    <button type="button" class="btn btn-primary mt-n3" data-bs-toggle="modal" data-bs-target="#courseModal" data-mode="create">
       <i class='fas fa-plus-circle me-2'></i> Add Course
     </button>
   </div>
@@ -135,17 +135,33 @@
             <i class="ti ti-chevron-left"></i> prev
           </a>
         </li>
-        {% endif %}
-        {% for num in courses.paginator.page_range %}
-        <li class="page-item {% if courses.number == num %}active{% endif %}">
-          <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+        {% else %}
+        <li class="page-item disabled">
+          <span class="page-link"><i class="ti ti-chevron-left"></i> prev</span>
         </li>
+        {% endif %}
+
+        {% for num in courses.paginator.page_range %}
+          {% if num == courses.number %}
+          <li class="page-item active">
+            <span class="page-link">{{ num }}</span>
+          </li>
+          {% else %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+          </li>
+          {% endif %}
         {% endfor %}
+
         {% if courses.has_next %}
         <li class="page-item">
           <a class="page-link" href="?page={{ courses.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
             next <i class="ti ti-chevron-right"></i>
           </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+          <span class="page-link">next <i class="ti ti-chevron-right"></i></span>
         </li>
         {% endif %}
       </ul>

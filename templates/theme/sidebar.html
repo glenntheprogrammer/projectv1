@@ -73,6 +73,15 @@
           </a>
         </li>
 
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.app_name == 'termsettings' %}active{% endif %}" href="{% url 'termsettings:term_settings' %}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block">
+              <i class="nav-icon fas fa-gear"></i>
+            </span>
+            <span class="nav-link-title">Settings</span>
+          </a>
+        </li>
+
         {% if user.is_authenticated %}
         <li class="nav-item d-lg-none">
           <a class="nav-link" href="{% url 'logout' %}">
@@ -101,6 +110,8 @@
             </a>
             {% endif %}
           </div>
+          {% if user.is_authenticated %}
+          {% endif %}
         </li>
 
       </ul>

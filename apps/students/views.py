@@ -4,11 +4,12 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db import IntegrityError
-from django.db.models import Q, Count
+from django.db.models import Q
 
 from datetime import date
 
 from apps.attendance.models import Tblattendance
+from apps.attendance.terms import filter_by_term, status_counts, term_context
 from apps.courses.models import Tblcourse
 from apps.scoping import scoped_courses, scoped_student, scoped_students
 from .models import Tblstudents
@@ -60,16 +61,26 @@ def student_list_page(request, course_id=None):
             selected_course_name = selected_course.name
 
     student_rows = []
+    term_context_data = term_context(request)
+    view_term = term_context_data['view_term']
+
     today_records = dict(
-        Tblattendance.objects.filter(
-            attend_date=date.today(),
-            student_id__in=scoped_students(request.user).values_list('id', flat=True),
+        filter_by_term(
+            Tblattendance.objects.filter(
+                attend_date=date.today(),
+                student_id__in=scoped_students(request.user).values_list('id', flat=True),
+            ),
+            view_term,
         ).values_list('student_id', 'status')
     )
 
     for student in students:
-        attendance_counts = Tblattendance.objects.filter(student_id=student).values('status').annotate(count=Count('status'))
-        attendance_map = {item['status']: item['count'] for item in attendance_counts}
+        attendance_counts = status_counts(
+            filter_by_term(
+                Tblattendance.objects.filter(student_id=student),
+                view_term,
+            )
+        )
 
         student_rows.append({
             'id': student.id,
@@ -80,22 +91,20 @@ def student_list_page(request, course_id=None):
             'enrollment_type_display': student.get_enrollment_type_display(),
             'course_display': _get_course_display(student.courseid, request.user),
             'today_status': today_records.get(student.id, ''),
-            'attendance_counts': {
-                'present_count': attendance_map.get('1', 0),
-                'late_count': attendance_map.get('2', 0),
-                'absent_count': attendance_map.get('3', 0),
-                'excused_count': attendance_map.get('4', 0),
-            },
+            'attendance_counts': attendance_counts,
         })
 
-    return render(request, 'students.html', {
+    page_context = {
         'students': student_rows,
         'students_page': students,  # pass the raw Page object for pagination controls
         'query': query,
         'courses': courses,
         'selected_course_id': course_id,
         'selected_course_name': selected_course_name,
-    })
+    }
+    page_context.update(term_context_data)
+
+    return render(request, 'students.html', page_context)
 
 
 @login_required(login_url='login')

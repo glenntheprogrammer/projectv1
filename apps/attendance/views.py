@@ -4,12 +4,18 @@ from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import render
 from django.views.decorators.http import require_POST
 
 from apps.scoping import scoped_student
-from apps.students.models import Tblstudents
 from .models import Tblattendance
+from .terms import (
+    filter_by_term,
+    get_active_term,
+    status_counts,
+    term_context,
+    term_label,
+)
 
 
 def _status_label(status_value):
@@ -35,26 +41,37 @@ def attendance_save_ajax(request):
         return JsonResponse({'error': 'Please choose a valid attendance status.'}, status=400)
 
     student = scoped_student(request.user, student_id)
+    active_term = get_active_term(request.user)
 
     try:
         attendance, created = Tblattendance.objects.update_or_create(
             attend_date=date.today(),
             student_id=student,
-            defaults={'status': status},
+            defaults={'status': status, 'term': active_term},
         )
     except IntegrityError:
         attendance = Tblattendance.objects.filter(
-            attend_date=date.today(),
-            student_id=student,
+            attend_date=date.today(), student_id=student,
         ).first()
         attendance.status = status
-        attendance.save(update_fields=['status'])
+        attendance.term = active_term
+        attendance.save(update_fields=['status', 'term'])
+
+    # The badges on the student list report on whichever term that page is
+    # showing, so hand back fresh totals rather than letting the page guess.
+    counts = status_counts(
+        Tblattendance.objects.filter(student_id=student, term=active_term)
+    )
 
     return JsonResponse({
         'status': 'saved',
         'label': _status_label(status),
         'student': student.fullname,
+        'term': active_term,
+        'term_label': term_label(active_term),
+        'counts': counts,
     })
+
 
 
 @login_required(login_url='login')
@@ -65,14 +82,21 @@ def attendance_calendar_view(request, student_id):
     month = int(request.GET.get('month', date.today().month))
     current_month = date(year, month, 1)
 
-    records = Tblattendance.objects.filter(
-        student_id=student,
-        attend_date__year=year,
-        attend_date__month=month,
+    term_context_data = term_context(request)
+    term = term_context_data['view_term']
+
+    records = filter_by_term(
+        Tblattendance.objects.filter(
+            student_id=student,
+            attend_date__year=year,
+            attend_date__month=month,
+        ),
+        term,
     ).order_by('attend_date')
 
     attendance_map = {record.attend_date: record for record in records}
     calendar_weeks = []
+    totals = {'1': 0, '2': 0, '3': 0, '4': 0}
 
     for week in Calendar(firstweekday=6).monthdayscalendar(year, month):
         week_days = []
@@ -83,7 +107,9 @@ def attendance_calendar_view(request, student_id):
 
             current_date = date(year, month, day)
             record = attendance_map.get(current_date)
+
             if record:
+                totals[record.status] = totals.get(record.status, 0) + 1
                 week_days.append({
                     'day': day,
                     'record': record,
@@ -111,7 +137,7 @@ def attendance_calendar_view(request, student_id):
     else:
         next_month = date(year, month + 1, 1)
 
-    return render(request, 'attendance_calendar.html', {
+    page_context = {
         'student': student,
         'calendar_weeks': calendar_weeks,
         'student_id': student_id,
@@ -120,4 +146,13 @@ def attendance_calendar_view(request, student_id):
         'next_month': next_month,
         'current_year': year,
         'current_month': month,
-    })
+        'month_totals': {
+            'present_count': totals.get('1', 0),
+            'late_count': totals.get('2', 0),
+            'absent_count': totals.get('3', 0),
+            'excused_count': totals.get('4', 0),
+        },
+    }
+    page_context.update(term_context_data)
+
+    return render(request, 'attendance_calendar.html', page_context)

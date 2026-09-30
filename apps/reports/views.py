@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from apps.attendance.models import Tblattendance
+from apps.attendance.terms import filter_by_term, status_counts, term_context
 from apps.courses.models import Tblcourse
 from apps.scoping import scoped_courses, scoped_students
 from apps.students.models import Tblstudents
@@ -12,6 +13,8 @@ from apps.students.models import Tblstudents
 @login_required(login_url='login')
 def course_reports_view(request):
     courses = scoped_courses(request.user).filter(status='active').order_by('name')
+    term_context_data = term_context(request)
+    view_term = term_context_data['view_term']
     report_rows = []
 
     for course in courses:
@@ -24,11 +27,16 @@ def course_reports_view(request):
         }
 
         for student in students:
-            records = Tblattendance.objects.filter(student_id=student).order_by('attend_date')
-            late_count = records.filter(status='2').count()
-            absent_count = records.filter(status='3').count()
-            present_count = records.filter(status='1').count()
-            excused_count = records.filter(status='4').count()
+            counts = status_counts(
+                filter_by_term(
+                    Tblattendance.objects.filter(student_id=student),
+                    view_term,
+                )
+            )
+
+            late_count = counts['late_count']
+            absent_count = counts['absent_count']
+            present_count = counts['present_count']
 
             if late_count > 0:
                 course_report['most_late'].append({
@@ -46,7 +54,7 @@ def course_reports_view(request):
                 course_report['perfect_attendance'].append({
                     'student': student,
                     'present_count': present_count,
-                    'excused_count': excused_count,
+                    'excused_count': counts['excused_count'],
                 })
 
         course_report['most_late'] = sorted(course_report['most_late'], key=lambda item: item['late_count'], reverse=True)
@@ -54,6 +62,9 @@ def course_reports_view(request):
         course_report['perfect_attendance'] = sorted(course_report['perfect_attendance'], key=lambda item: item['present_count'], reverse=True)
         report_rows.append(course_report)
 
-    return render(request, 'reports/course_reports.html', {
+    page_context = {
         'report_rows': report_rows,
-    })
+    }
+    page_context.update(term_context_data)
+
+    return render(request, 'reports/course_reports.html', page_context)

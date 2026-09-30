@@ -18,11 +18,11 @@
         {{ student.fullname }} <span class="text-muted">({{ student.idno }})</span>
       </div>
       <div class="card-actions d-flex gap-2">
-        <a href="?year={{ prev_month.year }}&month={{ prev_month.month }}" class="btn btn-outline-secondary btn-sm">
+        <a href="?year={{ prev_month.year }}&month={{ prev_month.month }}{% if view_term != active_term %}&term={{ view_term }}{% endif %}" class="btn btn-outline-secondary btn-sm">
           <i class="fas fa-chevron-left me-1"></i> Prev
         </a>
-        <a href="?year={{ current_year }}&month={{ current_month }}" class="btn btn-outline-primary btn-sm">Today</a>
-        <a href="?year={{ next_month.year }}&month={{ next_month.month }}" class="btn btn-outline-secondary btn-sm">
+        <a href="?year={{ current_year }}&month={{ current_month }}{% if view_term != active_term %}&term={{ view_term }}{% endif %}" class="btn btn-outline-primary btn-sm">Today</a>
+        <a href="?year={{ next_month.year }}&month={{ next_month.month }}{% if view_term != active_term %}&term={{ view_term }}{% endif %}" class="btn btn-outline-secondary btn-sm">
           Next <i class="fas fa-chevron-right ms-1"></i>
         </a>
         <a href="{% url 'students:student_list' %}" class="btn btn-outline-secondary btn-sm">
@@ -33,7 +33,11 @@
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0">{{ month_label }}</h3>
-        <span class="text-muted">Attendance overview for this month</span>
+        <span class="text-muted">
+          Attendance overview for {{ view_term_label }}
+          &middot; {{ month_totals.present_count }} present, {{ month_totals.late_count }} late,
+          {{ month_totals.absent_count }} absent, {{ month_totals.excused_count }} excused
+        </span>
       </div>
 
       <div class="table-responsive">
