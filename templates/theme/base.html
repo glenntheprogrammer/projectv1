@@ -37,9 +37,9 @@
             <div class="page-body">
                 <div class="container-xl">
                     {% if request.user.is_authenticated %}
-                    <div class="dh-term-chip mb-3">
-                        <span class="dh-term-chip-label">Active Term</span>
-                        <span class="badge bg-primary text-white">{{ active_term_label }}</span>
+                    <div class="dh-term-chip mb-1">
+                        <label class="dh-term-chip-label" style="font-size: 10px;">Active Term</label>
+                        <label class="badge bg-primary text-white" style="font-size: 10px;">{{ active_term_label }}</label>
                     </div>
                     {% endif %}
                     {% block content %}
